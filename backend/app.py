@@ -21,11 +21,15 @@ sms = africastalking.SMS
 
 # Initialize MongoDB
 mongo_client = MongoClient(mongo_uri)
-db = mongo_client["event_command_center"]   # database name
-guests_collection = db["guests"]            # collection (like a table)
-event_collection = db["event_config"]       # stores the current event's location/date
-ushers_collection = db["ushers"]            # usher records
-tasks_collection = db["tasks"]              # task assignments
+db = mongo_client["event_command_center"]
+guests_collection = db["guests"]
+event_collection = db["event_config"]
+ushers_collection = db["ushers"]
+tasks_collection = db["tasks"]
+contributions_collection = db["contributions"]
+
+PAYMENT_PRODUCT_NAME = "EventContributions"
+PAYMENTS_SANDBOX_URL = "https://payments.sandbox.africastalking.com/mobile/checkout/request"
 
 app = Flask(__name__)
 
@@ -37,7 +41,7 @@ def get_event_config():
 
 
 def generate_code(length=6):
-    """Generate a random alphanumeric guest code, e.g. 'A1B2C3'."""
+    """Generate a random alphanumeric code, e.g. 'A1B2C3'."""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 
@@ -71,12 +75,12 @@ def geocode_location(location_name):
 def get_weather_blurb():
     """
     Fetch the forecast for the currently configured event location/date
-    from Open-Meteo (no API key needed) and return a short SMS-friendly summary.
+    from Open-Meteo and return a short SMS-friendly summary.
     Returns an empty string if no event is configured yet, or if the lookup fails.
     """
     config = get_event_config()
     if not config:
-        return ""  # no event location/date set yet
+        return ""
 
     try:
         url = "https://api.open-meteo.com/v1/forecast"
@@ -109,12 +113,36 @@ def get_weather_blurb():
         return ""
 
 
+def request_mobile_checkout(phone_number, amount, currency_code="UGX"):
+    """
+    Trigger a mobile money payment prompt using Africa's Talking Payments REST API directly.
+    """
+    headers = {
+        "apiKey": api_key,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    payload = {
+        "username": username,
+        "productName": PAYMENT_PRODUCT_NAME,
+        "phoneNumber": phone_number,
+        "currencyCode": currency_code,
+        "amount": amount
+    }
+    response = requests.post(PAYMENTS_SANDBOX_URL, json=payload, headers=headers, timeout=10)
+    return response.json()
+
+
+@app.route('/')
+def home():
+    return jsonify({"message": "Event Command Center backend is running."})
+
+
 @app.route('/event', methods=['POST'])
 def set_event():
     """
-    Set (or update) the event's location and date. Call this once per event.
+    Set (or update) the event's location and date.
     Expects JSON: { "location": "Kampala, Uganda", "date": "2026-09-26" }
-    Automatically converts the location name into coordinates.
     """
     data = request.get_json()
 
@@ -159,11 +187,6 @@ def view_event():
     return jsonify(config), 200
 
 
-@app.route('/')
-def home():
-    return jsonify({"message": "Event Command Center backend is running."})
-
-
 @app.route('/guests', methods=['POST'])
 def register_guest():
     """
@@ -178,12 +201,10 @@ def register_guest():
     name = data['name']
     phone = data['phone']
 
-    # Generate a unique code
     code = generate_code()
-    while guests_collection.find_one({"code": code}):  # avoid collisions
+    while guests_collection.find_one({"code": code}):
         code = generate_code()
 
-    # Save guest record to MongoDB
     guest = {
         "name": name,
         "phone": phone,
@@ -194,7 +215,6 @@ def register_guest():
     }
     guests_collection.insert_one(guest)
 
-    # Send SMS invite
     message = f"Hi {name}, you're invited! Your check-in code is: {code}"
 
     weather = get_weather_blurb()
@@ -224,8 +244,6 @@ def list_guests():
 def send_reminders():
     """
     Send a reminder SMS (with current weather forecast) to all registered guests.
-    Call this manually, or hook it up to a scheduler to run automatically
-    closer to the event date.
     """
     all_guests = list(guests_collection.find({}, {"_id": 0}))
 
@@ -296,7 +314,7 @@ def list_ushers():
 def assign_task():
     """
     Assign a task to an usher by phone number. Sends an SMS notification
-    with a task code the usher (or organizer) can use to mark it done.
+    with a task code.
     Expects JSON: { "title": "Set up registration desk", "usher_phone": "+254712345678", "due_time": "9:00 AM" }
     """
     data = request.get_json()
@@ -373,6 +391,58 @@ def complete_task():
         "message": f"Task '{updated_task['title']}' marked as done.",
         "task": updated_task
     }), 200
+
+
+@app.route('/contributions', methods=['POST'])
+def make_contribution():
+    """
+    Record a contribution and send an SMS receipt.
+    Expects JSON: { "name": "Jane Doe", "phone": "+254712345678", "amount": 5000, "currency": "UGX" }
+    """
+    data = request.get_json()
+
+    if not data or 'name' not in data or 'phone' not in data or 'amount' not in data:
+        return jsonify({"error": "Missing 'name', 'phone', or 'amount' in request"}), 400
+
+    name = data['name']
+    phone = data['phone']
+    amount = data['amount']
+    currency = data.get('currency', 'UGX')
+
+    contribution = {
+        "name": name,
+        "phone": phone,
+        "amount": amount,
+        "currency": currency
+    }
+    contributions_collection.insert_one(contribution)
+
+    receipt = f"Hi {name}, your contribution of {amount} {currency} has been recorded. Thank you!"
+    try:
+        sms_response = sms.send(receipt, [phone])
+    except Exception as e:
+        return jsonify({
+            "message": "Contribution recorded, but SMS receipt failed.",
+            "contribution": {k: v for k, v in contribution.items() if k != "_id"},
+            "sms_error": str(e)
+        }), 201
+
+    return jsonify({
+        "message": "Contribution recorded and SMS receipt sent.",
+        "contribution": {k: v for k, v in contribution.items() if k != "_id"},
+        "sms_response": sms_response
+    }), 201
+
+
+@app.route('/contributions', methods=['GET'])
+def list_contributions():
+    """Return all contributions and a running total, for the budget dashboard."""
+    all_contributions = list(contributions_collection.find({}, {"_id": 0}))
+    total = sum(c.get('amount', 0) for c in all_contributions)
+    return jsonify({
+        "contributions": all_contributions,
+        "total": total
+    })
 
 
 @app.route('/checkin', methods=['POST'])
