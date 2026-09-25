@@ -10,11 +10,21 @@ init_db()
 app = Flask(__name__)
 app.register_blueprint(feedback_bp)
 
-# --- 1. ORGANIZER DASHBOARD ROUTE ---
+# --- 1. HOME / LANDING PAGE ROUTE ---
 @app.route("/")
+def home():
+    feedbacks = get_all_feedback()
+    return render_template("home.html", feedbacks=feedbacks)
+
+# --- 2. FEEDBACK DASHBOARD ROUTE ---
+@app.route("/dashboard")
 def dashboard():
     feedbacks = get_all_feedback()
     return render_template("dashboard.html", feedbacks=feedbacks)
+
+@app.route("/feedback")
+def feedback():
+    return dashboard()
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
