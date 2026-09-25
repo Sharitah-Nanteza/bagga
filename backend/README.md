@@ -41,19 +41,42 @@ Returns:
 
 #### `POST /event`
 
-Geocodes and saves the current event location and date. The weather forecast used in guest invites and reminders is based on this configuration.
+Geocodes and saves the current event name, location, date, and optional schedule. When the schedule, date, event name, or venue changes, registered speaker contacts (`kind: "speaker"`) receive an SMS update.
 
 Request:
 
 ```json
-{"location": "Kampala, Uganda", "date": "2026-09-26"}
+{
+  "event_name": "Bagga Summit",
+  "location": "Kampala, Uganda",
+  "date": "2026-09-26",
+  "schedule": "Keynote at 10:00; lunch at 13:00"
+}
 ```
 
-Returns `200` with the resolved location, coordinates, and date. Returns `400` for missing fields or `404` when the location cannot be found.
+Returns `200` with resolved event details and speaker notification counts. Returns `400` for invalid input, `404` when the location cannot be found, or `503` when MongoDB is not configured.
 
 #### `GET /event`
 
 Returns the saved event configuration, or `404` when no event has been configured.
+
+#### `GET /weather`
+
+Returns the configured event-day forecast and the recommended reminder date (one day before the event).
+
+#### `GET /communications/status`
+
+Returns SMS credentials, inbound SMS number, USSD service code, and MongoDB configuration status for the organizer interface.
+
+### SMS and USSD feedback
+
+#### `POST /api/sms`
+
+Africa's Talking inbound SMS callback. Accepts `from` and `text` fields, anonymizes the sender, classifies the feedback, and saves it to the dashboard feed.
+
+#### `POST /api/ussd`
+
+Africa's Talking USSD callback. Menu option 6 returns the saved event name, date, venue, and schedule. Feedback options are anonymized and saved to the same dashboard feed.
 
 ### Guests and reminders
 
@@ -75,18 +98,18 @@ Returns all registered guests, including their check-in state and code.
 
 #### `POST /reminders`
 
-Sends a weather-aware reminder SMS to every registered guest. Returns `200` with a per-guest result list. If there are no guests, returns `{"message": "No guests to remind."}`.
+Sends a weather-aware reminder SMS to every registered guest. Returns per-recipient results, counts, and the forecast. If no forecast is available, returns `502` without sending.
 
 ### Ushers
 
 #### `POST /ushers`
 
-Registers an usher, assigns a post, and sends an SMS notification.
+Registers an event-team or speaker contact, assigns a post/session, and sends an SMS notification. Pass `"kind": "speaker"` to enable automatic schedule alerts; `kind` defaults to `team`.
 
 Request:
 
 ```json
-{"name": "Grace", "phone": "+254712345678", "post": "Main Entrance"}
+{"name": "Grace", "phone": "+254712345678", "post": "Opening keynote", "kind": "speaker"}
 ```
 
 Returns `201` with `usher` and `sms_response`.
