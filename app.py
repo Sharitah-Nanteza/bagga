@@ -1,16 +1,19 @@
-import os
 import hashlib
-from flask import Flask, request, jsonify, render_template
-from dotenv import load_dotenv
-import africastalking
+import os
 
-from database import init_db, save_feedback, get_all_feedback
+import africastalking
+from dotenv import load_dotenv
+from flask import Flask, jsonify, render_template, request
+
 from ai_engine import analyze_feedback
+from backend.app import feedback_bp
+from database import get_all_feedback, init_db, save_feedback
 
 load_dotenv()
 init_db()
 
 app = Flask(__name__)
+app.register_blueprint(feedback_bp)
 
 # Initialize Africa's Talking SDK safely
 AT_USERNAME = os.getenv("AT_USERNAME", "sandbox")

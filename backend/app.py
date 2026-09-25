@@ -1,11 +1,12 @@
+import datetime
 import os
 import random
 import string
-import requests
-import datetime
-from flask import Flask, request, jsonify
-from dotenv import load_dotenv
+
 import africastalking
+import requests
+from dotenv import load_dotenv
+from flask import Blueprint, jsonify, request
 from pymongo import MongoClient
 
 # Load environment variables
@@ -16,26 +17,38 @@ api_key = os.getenv("AT_API_KEY")
 mongo_uri = os.getenv("MONGO_URI")
 
 # Initialize Africa's Talking
-africastalking.initialize(username, api_key)
+if username and api_key:
+    africastalking.initialize(username, api_key)
 sms = africastalking.SMS
 
 # Initialize MongoDB
-mongo_client = MongoClient(mongo_uri)
-db = mongo_client["event_command_center"]
-guests_collection = db["guests"]
-event_collection = db["event_config"]
-ushers_collection = db["ushers"]
-tasks_collection = db["tasks"]
-contributions_collection = db["contributions"]
+if mongo_uri:
+    mongo_client = MongoClient(mongo_uri)
+    db = mongo_client["event_command_center"]
+    guests_collection = db["guests"]
+    event_collection = db["event_config"]
+    ushers_collection = db["ushers"]
+    tasks_collection = db["tasks"]
+    contributions_collection = db["contributions"]
+else:
+    mongo_client = None
+    db = None
+    guests_collection = None
+    event_collection = None
+    ushers_collection = None
+    tasks_collection = None
+    contributions_collection = None
 
 PAYMENT_PRODUCT_NAME = "EventContributions"
 PAYMENTS_SANDBOX_URL = "https://payments.sandbox.africastalking.com/mobile/checkout/request"
 
-app = Flask(__name__)
+feedback_bp = Blueprint("feedback_bp", __name__)
 
 
 def get_event_config():
     """Fetch the current event's location and date settings from MongoDB."""
+    if event_collection is None:
+        return None
     config = event_collection.find_one({"_id": "current_event"})
     return config
 
@@ -133,12 +146,12 @@ def request_mobile_checkout(phone_number, amount, currency_code="UGX"):
     return response.json()
 
 
-@app.route('/')
+@feedback_bp.route('/')
 def home():
     return jsonify({"message": "Event Command Center backend is running."})
 
 
-@app.route('/event', methods=['POST'])
+@feedback_bp.route('/event', methods=['POST'])
 def set_event():
     """
     Set (or update) the event's location and date.
@@ -177,7 +190,7 @@ def set_event():
     }), 200
 
 
-@app.route('/event', methods=['GET'])
+@feedback_bp.route('/event', methods=['GET'])
 def view_event():
     """View the currently configured event location and date."""
     config = get_event_config()
@@ -187,7 +200,7 @@ def view_event():
     return jsonify(config), 200
 
 
-@app.route('/guests', methods=['POST'])
+@feedback_bp.route('/guests', methods=['POST'])
 def register_guest():
     """
     Register a new guest and send them an SMS invite with their unique code.
@@ -233,14 +246,14 @@ def register_guest():
     }), 201
 
 
-@app.route('/guests', methods=['GET'])
+@feedback_bp.route('/guests', methods=['GET'])
 def list_guests():
     """Return all registered guests (for the organizer dashboard)."""
     all_guests = list(guests_collection.find({}, {"_id": 0}))
     return jsonify(all_guests)
 
 
-@app.route('/reminders', methods=['POST'])
+@feedback_bp.route('/reminders', methods=['POST'])
 def send_reminders():
     """
     Send a reminder SMS (with current weather forecast) to all registered guests.
@@ -267,7 +280,7 @@ def send_reminders():
     return jsonify({"message": "Reminders processed.", "results": results}), 200
 
 
-@app.route('/ushers', methods=['POST'])
+@feedback_bp.route('/ushers', methods=['POST'])
 def register_usher():
     """
     Register an usher and assign them a duty post. Sends an SMS notification.
@@ -303,14 +316,14 @@ def register_usher():
     }), 201
 
 
-@app.route('/ushers', methods=['GET'])
+@feedback_bp.route('/ushers', methods=['GET'])
 def list_ushers():
     """Return all registered ushers (for the organizer dashboard)."""
     all_ushers = list(ushers_collection.find({}, {"_id": 0}))
     return jsonify(all_ushers)
 
 
-@app.route('/tasks', methods=['POST'])
+@feedback_bp.route('/tasks', methods=['POST'])
 def assign_task():
     """
     Assign a task to an usher by phone number. Sends an SMS notification
@@ -356,14 +369,14 @@ def assign_task():
     }), 201
 
 
-@app.route('/tasks', methods=['GET'])
+@feedback_bp.route('/tasks', methods=['GET'])
 def list_tasks():
     """Return all tasks (for the organizer dashboard progress view)."""
     all_tasks = list(tasks_collection.find({}, {"_id": 0}))
     return jsonify(all_tasks)
 
 
-@app.route('/tasks/complete', methods=['POST'])
+@feedback_bp.route('/tasks/complete', methods=['POST'])
 def complete_task():
     """
     Mark a task as done using its task code.
@@ -393,7 +406,7 @@ def complete_task():
     }), 200
 
 
-@app.route('/contributions', methods=['POST'])
+@feedback_bp.route('/contributions', methods=['POST'])
 def make_contribution():
     """
     Record a contribution and send an SMS receipt.
@@ -434,7 +447,7 @@ def make_contribution():
     }), 201
 
 
-@app.route('/contributions', methods=['GET'])
+@feedback_bp.route('/contributions', methods=['GET'])
 def list_contributions():
     """Return all contributions and a running total, for the budget dashboard."""
     all_contributions = list(contributions_collection.find({}, {"_id": 0}))
@@ -445,7 +458,7 @@ def list_contributions():
     })
 
 
-@app.route('/checkin', methods=['POST'])
+@feedback_bp.route('/checkin', methods=['POST'])
 def checkin():
     """
     Check in a guest using their code.
@@ -491,5 +504,132 @@ def checkin():
     }), 200
 
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+@feedback_bp.route('/api/ussd', methods=['POST'])
+def ussd_callback():
+    session_id = request.values.get("sessionId", "")
+    service_code = request.values.get("serviceCode", "")
+    phone_number = request.values.get("phoneNumber", "")
+    text = request.values.get("text", "").strip()
+
+    anon_id = f"Attendee#{hashlib.md5(phone_number.encode()).hexdigest()[:6].upper()}"
+
+    if text == "":
+        response = "CON Welcome to Bagga Whisper (100% Anonymous)\n"
+        response += "1. Report Audio/Sound Issue\n"
+        response += "2. Report Venue/AC Issue\n"
+        response += "3. Send Praise / Shout-out\n"
+        response += "4. Custom Feedback Note\n"
+        response += "5. 🎙️ Record Voice Note Instead"
+        return response, 200, {'Content-Type': 'text/plain'}
+
+    if text == "5":
+        return "END 🎙️ Prefer speaking? Call our Hotline at +256-800-WHISPER to leave a voice recording after the beep!", 200, {'Content-Type': 'text/plain'}
+
+    if text == "1":
+        return "CON Please type details of the Audio/Sound issue:", 200, {'Content-Type': 'text/plain'}
+
+    if text == "2":
+        return "CON Please describe the Venue/AC/Safety issue:", 200, {'Content-Type': 'text/plain'}
+
+    if text == "3":
+        return "CON Type your praise or shout-out note:", 200, {'Content-Type': 'text/plain'}
+
+    if text == "4":
+        return "CON Type your detailed feedback note:", 200, {'Content-Type': 'text/plain'}
+
+    raw_text = ""
+    category_hint = None
+
+    if text.startswith("1*"):
+        raw_text = text[2:]
+        category_hint = "AUDIO_LOGISTICS"
+    elif text.startswith("2*"):
+        raw_text = text[2:]
+        category_hint = "FACILITIES"
+    elif text.startswith("3*"):
+        raw_text = text[2:]
+        category_hint = "CONTENT"
+    elif text.startswith("4*"):
+        raw_text = text[2:]
+    else:
+        raw_text = text
+
+    ai_result = analyze_feedback(raw_text)
+
+    if category_hint:
+        ai_result["category"] = category_hint
+
+    save_feedback(
+        anon_id=anon_id,
+        channel="USSD",
+        raw_text=raw_text,
+        category=ai_result.get("category", "GENERAL"),
+        urgency=ai_result.get("urgency", "MEDIUM")
+    )
+
+    response = "END Thank you! Your anonymous feedback has been logged securely."
+    return response, 200, {'Content-Type': 'text/plain'}
+
+
+@feedback_bp.route("/api/voice_web", methods=["POST"])
+def voice_web_callback():
+    data = request.get_json(silent=True) or {}
+    note = data.get("note", "").strip()
+
+    if not note:
+        return jsonify({"status": "error", "message": "No note provided"}), 400
+
+    anon_id = f"Attendee#{hashlib.md5('web-user'.encode()).hexdigest()[:6].upper()}"
+    ai_res = analyze_feedback(note)
+    save_feedback(
+        anon_id=anon_id,
+        channel="WEB",
+        raw_text=note,
+        category=ai_res.get("category", "GENERAL"),
+        urgency=ai_res.get("urgency", "MEDIUM")
+    )
+
+    return jsonify({"status": "success", "message": "Feedback submitted anonymously."}), 200
+
+
+@feedback_bp.route("/api/voice", methods=["POST"])
+def voice_callback():
+    phone_number = request.values.get("callerNumber", "")
+    recording_url = request.values.get("recordingUrl", "")
+    anon_id = f"Attendee#{hashlib.md5(phone_number.encode()).hexdigest()[:6].upper()}"
+
+    if recording_url:
+        note_text = f"Voice Note Recording: {recording_url}"
+        ai_res = analyze_feedback("Voice feedback left on hotline")
+        save_feedback(anon_id, "VOICE", note_text, ai_res.get("category"), ai_res.get("urgency"), ai_res.get("sentiment"))
+
+    xml_response = '<?xml version="1.0" encoding="UTF-8"?>'
+    xml_response += '<Response>'
+    xml_response += '<Say>Welcome to Bagga Whisper. Leave your anonymous feedback after the beep.</Say>'
+    xml_response += '<Record finishOnKey="#" maxLength="10" trimSilence="true"/>'
+    xml_response += '</Response>'
+
+    return xml_response, 200, {"Content-Type": "application/xml"}
+
+
+@feedback_bp.route('/api/feedback/reward', methods=['POST'])
+def send_airtime_reward():
+    data = request.json or {}
+    phone_number = data.get("phone_number")
+    amount = data.get("amount", "500")
+
+    if not phone_number:
+        return jsonify({"status": "error", "message": "Phone number required"}), 400
+
+    if not airtime:
+        return jsonify({"status": "simulated", "message": f"Simulated {amount} UGX reward to {phone_number} (Add AT_API_KEY to .env for live transfer)."}), 200
+
+    try:
+        recipients = [{"phoneNumber": phone_number, "currencyCode": "UGX", "amount": amount}]
+        res = airtime.send(recipients=recipients)
+        return jsonify({"status": "success", "response": res})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# NOTE: This module is mounted by the main app; it intentionally does not start a separate server here.
