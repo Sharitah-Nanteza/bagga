@@ -22,6 +22,10 @@ def dashboard():
     feedbacks = get_all_feedback()
     return render_template("dashboard.html", feedbacks=feedbacks)
 
+@app.route("/attendee")
+def attendee():
+    return render_template("attendee.html")
+
 @app.route("/feedback")
 def feedback():
     return dashboard()

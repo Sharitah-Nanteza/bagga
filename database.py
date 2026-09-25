@@ -17,7 +17,6 @@ def init_db():
     """Initialize indexes for the shared MongoDB feedback collection."""
     if feedback_collection is None:
         return
-
     feedback_collection.create_index("timestamp")
     feedback_collection.create_index("anon_id")
 
@@ -26,7 +25,6 @@ def save_feedback(anon_id, channel, raw_text, category="GENERAL", urgency="LOW",
     """Insert a new anonymous feedback document into MongoDB."""
     if feedback_collection is None:
         return None
-
     document = {
         "anon_id": anon_id,
         "channel": channel,
@@ -43,7 +41,6 @@ def get_all_feedback():
     """Return all feedback records ordered newest first."""
     if feedback_collection is None:
         return []
-
     feedback = list(feedback_collection.find().sort("timestamp", -1))
     for item in feedback:
         item["_id"] = str(item.get("_id"))
