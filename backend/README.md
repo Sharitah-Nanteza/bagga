@@ -17,7 +17,8 @@ Flask backend for event setup, guest registration, check-in, usher coordination,
    ```bash
    python3 -m venv .venv
    .venv/bin/pip install -r requirements.txt
-   .venv/bin/python app.py
+  cd ..
+  .venv/bin/python app.py
    ```
 
 The API runs at `http://127.0.0.1:5000`.

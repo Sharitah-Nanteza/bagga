@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import os
 import random
 import string
@@ -8,6 +9,9 @@ import requests
 from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from pymongo import MongoClient
+
+from ai_engine import analyze_feedback
+from database import save_feedback
 
 # Load environment variables
 load_dotenv()
@@ -20,6 +24,7 @@ mongo_uri = os.getenv("MONGO_URI")
 if username and api_key:
     africastalking.initialize(username, api_key)
 sms = africastalking.SMS
+airtime = africastalking.Airtime
 
 # Initialize MongoDB
 if mongo_uri:
@@ -144,11 +149,6 @@ def request_mobile_checkout(phone_number, amount, currency_code="UGX"):
     }
     response = requests.post(PAYMENTS_SANDBOX_URL, json=payload, headers=headers, timeout=10)
     return response.json()
-
-
-@feedback_bp.route('/')
-def home():
-    return jsonify({"message": "Event Command Center backend is running."})
 
 
 @feedback_bp.route('/event', methods=['POST'])
