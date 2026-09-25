@@ -203,7 +203,7 @@
                 // Brief artificial delay (300ms) to make the loading animation visible locally
                 await new Promise(resolve => setTimeout(resolve, 300));
 
-                const response = await fetch('/api/reward', {
+                const response = await fetch('/api/feedback/reward', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
