@@ -1,1 +1,10 @@
+<<<<<<< HEAD
 .env
+=======
+venv/
+.env
+__pycache__/
+*.pyc
+*.sqlite3
+*.db
+>>>>>>> origin/main
