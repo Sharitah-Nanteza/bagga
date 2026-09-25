@@ -14,11 +14,17 @@ feedback_collection = mongo_db["feedback"] if mongo_db is not None else None
 
 
 def init_db():
-    """Initialize indexes for the shared MongoDB feedback collection."""
-    if feedback_collection is None:
+    """Initialize indexes for the shared MongoDB collections."""
+    if mongo_db is None:
         return
     feedback_collection.create_index("timestamp")
     feedback_collection.create_index("anon_id")
+    mongo_db["users"].create_index("phone", unique=True)
+    mongo_db["organisers"].create_index("organiser_code", unique=True)
+    mongo_db["organisers"].create_index("organiser_id", unique=True)
+    mongo_db["bookings"].create_index([("organiser_id", 1), ("status", 1)])
+    mongo_db["bookings"].create_index("client_id")
+    mongo_db["event_config"].create_index([("organiser_id", 1), ("event_id", 1)], unique=True)
 
 
 def save_feedback(anon_id, channel, raw_text, category="GENERAL", urgency="LOW", sentiment="NEUTRAL"):
