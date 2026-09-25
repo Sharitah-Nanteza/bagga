@@ -33,13 +33,23 @@ def anonymize_phone(phone_number):
         return "Attendee#00000"
     return "Attendee#" + hashlib.md5(phone_number.encode()).hexdigest()[:5].upper()
 
-# --- 1. ORGANIZER DASHBOARD ROUTE ---
+# --- 1. HOME / LANDING PAGE ROUTE ---
 @app.route("/")
+def home():
+    feedbacks = get_all_feedback()
+    return render_template("home.html", feedbacks=feedbacks)
+
+# --- 2. FEEDBACK DASHBOARD ROUTE ---
+@app.route("/dashboard")
 def dashboard():
     feedbacks = get_all_feedback()
     return render_template("dashboard.html", feedbacks=feedbacks)
 
-# --- 2. USSD CALLBACK HANDLER (*384*...#) ---
+@app.route("/feedback")
+def feedback():
+    return dashboard()
+
+# --- 3. USSD CALLBACK HANDLER (*384*...#) ---
 @app.route('/api/ussd', methods=['POST'])
 def ussd_callback():
     session_id = request.values.get("sessionId", "")
