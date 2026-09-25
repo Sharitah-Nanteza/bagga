@@ -40,45 +40,78 @@ def dashboard():
     return render_template("dashboard.html", feedbacks=feedbacks)
 
 # --- 2. USSD CALLBACK HANDLER (*384*...#) ---
-@app.route("/api/ussd", methods=["POST"])
+@app.route('/api/ussd', methods=['POST'])
 def ussd_callback():
+    session_id = request.values.get("sessionId", "")
+    service_code = request.values.get("serviceCode", "")
     phone_number = request.values.get("phoneNumber", "")
-    text = request.values.get("text", "")
-    anon_id = anonymize_phone(phone_number)
+    text = request.values.get("text", "").strip()
 
+    # Create anonymous hash for phone number
+    anon_id = f"Attendee#{hashlib.md5(phone_number.encode()).hexdigest()[:6].upper()}"
+
+    # Main Menu
     if text == "":
         response = "CON Welcome to Bagga Whisper (100% Anonymous)\n"
         response += "1. Report Audio/Sound Issue\n"
         response += "2. Report Venue/AC Issue\n"
         response += "3. Send Praise / Shout-out\n"
-        response += "4. Custom Feedback Note"
-    elif text == "1":
-        save_feedback(anon_id, "USSD", "Audio/Mic Issue reported via USSD quick option", "AUDIO_LOGISTICS", "HIGH", "NEGATIVE")
-        response = f"END Thank you {anon_id}. Your audio report has been flagged to organizers!"
-    elif text == "2":
-        save_feedback(anon_id, "USSD", "Venue Temperature Issue reported via USSD quick option", "VENUE_TEMPERATURE", "MEDIUM", "NEGATIVE")
-        response = f"END Thank you {anon_id}. Your venue report has been flagged!"
-    elif text == "3":
-        save_feedback(anon_id, "USSD", "Praise/Shout-out sent via USSD quick option", "PRAISE", "LOW", "POSITIVE")
-        response = f"END Thank you {anon_id}! Your praise was added to the Wall of Praise."
-    elif text == "4":
-        response = "CON Type your short feedback note:"
-    elif text.startswith("4*"):
-        custom_note = text.split("*", 1)[1]
-        ai_res = analyze_feedback(custom_note)
-        save_feedback(
-            anon_id=anon_id,
-            channel="USSD",
-            raw_text=custom_note,
-            category=ai_res.get("category", "GENERAL"),
-            urgency=ai_res.get("urgency", "LOW"),
-            sentiment=ai_res.get("sentiment", "NEUTRAL")
-        )
-        response = f"END Thank you {anon_id}. Your feedback was analyzed and logged!"
-    else:
-        response = "END Invalid selection."
+        response += "4. Custom Feedback Note\n"
+        response += "5. 🎙️ Record Voice Note Instead"
+        return response, 200, {'Content-Type': 'text/plain'}
 
-    return response, 200, {"Content-Type": "text/plain"}
+    # Option 5: Voice Hotline Guidance for Lazy / Hands-Free Users
+    if text == "5":
+        return "END 🎙️ Prefer speaking? Call our Hotline at +256-800-WHISPER to leave a voice recording after the beep!", 200, {'Content-Type': 'text/plain'}
+
+    # Stage 1: Text-based prompts
+    if text == "1":
+        return "CON Please type details of the Audio/Sound issue:", 200, {'Content-Type': 'text/plain'}
+    
+    if text == "2":
+        return "CON Please describe the Venue/AC/Safety issue:", 200, {'Content-Type': 'text/plain'}
+    
+    if text == "3":
+        return "CON Type your praise or shout-out note:", 200, {'Content-Type': 'text/plain'}
+    
+    if text == "4":
+        return "CON Type your detailed feedback note:", 200, {'Content-Type': 'text/plain'}
+
+    # Stage 2: User entered detailed text -> Process with AI and Save
+    raw_text = ""
+    category_hint = None
+
+    if text.startswith("1*"):
+        raw_text = text[2:]
+        category_hint = "AUDIO_LOGISTICS"
+    elif text.startswith("2*"):
+        raw_text = text[2:]
+        category_hint = "FACILITIES"
+    elif text.startswith("3*"):
+        raw_text = text[2:]
+        category_hint = "CONTENT"
+    elif text.startswith("4*"):
+        raw_text = text[2:]
+    else:
+        raw_text = text
+
+    # Analyze with Gemini AI
+    ai_result = analyze_feedback(raw_text)
+    
+    if category_hint:
+        ai_result["category"] = category_hint
+
+    # Save to SQLite Database
+    save_feedback(
+        anon_id=anon_id,
+        channel="USSD",
+        raw_text=raw_text,
+        category=ai_result.get("category", "GENERAL"),
+        urgency=ai_result.get("urgency", "MEDIUM")
+    )
+
+    response = "END Thank you! Your anonymous feedback has been logged securely."
+    return response, 200, {'Content-Type': 'text/plain'}
 
 # --- 3. VOICE RECORDING CALLBACK ---
 @app.route("/api/voice", methods=["POST"])
