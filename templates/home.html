@@ -813,17 +813,9 @@
             </div>
             <nav class="nav" aria-label="Main navigation">
                 <a href="{{ url_for('home') }}" aria-current="page">Home</a>
-                <details class="nav-dropdown">
-                    <summary>Organizer tools</summary>
-                    <div class="nav-dropdown-menu">
-                        <a href="#event-form">Event setup</a>
-                        <a href="#guest-form">Attendee invites</a>
-                        <a href="#team-form">Speaker and team contacts</a>
-                        <a href="#announcement-form">Announcements</a>
-                        <a href="#send-reminders">Weather reminders</a>
-                    </div>
-                </details>
-                <a href="{{ url_for('dashboard') }}" class="primary-btn">Feedback dashboard</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('register') }}" class="secondary-btn">Register</a>
+                <a href="{{ url_for('attendee') }}" class="primary-btn">Submit feedback</a>
             </nav>
         </header>
 
@@ -837,8 +829,9 @@
                 </p>
 
                 <div class="actions">
-        
-                    <a class="secondary-btn" href="#event-form">Set up event</a>
+                    <a class="cta" href="{{ url_for('attendee') }}">Submit feedback</a>
+                    <a class="secondary-btn" href="{{ url_for('register') }}">Join Bagga</a>
+                    <a class="secondary-btn" href="{{ url_for('dashboard') }}">View reports</a>
                 </div>
 
                 <div class="stats">

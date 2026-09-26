@@ -1,3 +1,5 @@
+import os
+
 from dotenv import load_dotenv
 from flask import Flask, render_template
 
@@ -8,6 +10,7 @@ load_dotenv()
 init_db()
 
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "bagga-development-key")
 app.register_blueprint(feedback_bp)
 
 # --- 1. HOME / LANDING PAGE ROUTE ---
@@ -25,6 +28,30 @@ def dashboard():
 @app.route("/attendee")
 def attendee():
     return render_template("attendee.html")
+
+@app.route("/register")
+def register():
+    return render_template("register.html")
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
+
+@app.route("/marketplace")
+def marketplace():
+    return render_template("marketplace.html")
+
+@app.route("/organiser/<organiser_id>")
+def organiser_profile(organiser_id):
+    return render_template("organiser_profile.html", organiser_id=organiser_id)
+
+@app.route("/organiser-dashboard")
+def organiser_dashboard():
+    return render_template("organiser_dashboard.html")
+
+@app.route("/client-dashboard")
+def client_dashboard():
+    return render_template("client_dashboard.html")
 
 @app.route("/feedback")
 def feedback():
