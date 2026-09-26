@@ -578,7 +578,7 @@
             <nav class="nav" aria-label="Main navigation">
                 <a href="{{ url_for('home') }}" aria-current="page">Home</a>
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a href="{{ url_for('register') }}" class="secondary-btn">Register</a>
+                <a href="{{ url_for('sms_simulator') }}" class="secondary-btn">SMS test</a>
                 <a href="{{ url_for('attendee') }}" class="primary-btn">Submit feedback</a>
             </nav>
         </header>
@@ -594,7 +594,7 @@
 
                 <div class="actions">
                     <a class="cta" href="{{ url_for('attendee') }}">Submit feedback</a>
-                    <a class="secondary-btn" href="{{ url_for('register') }}">Join Bagga</a>
+                    <a class="secondary-btn" href="{{ url_for('sms_simulator') }}">Test SMS</a>
                     <a class="secondary-btn" href="{{ url_for('dashboard') }}">View reports</a>
                 </div>
 
