@@ -1,22 +1,28 @@
 import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from pymongo.errors import ConfigurationError
 
-load_dotenv(Path(__file__).resolve().parent / "backend" / ".env")
+PROJECT_DIR = Path(__file__).resolve().parent
+load_dotenv(PROJECT_DIR / "backend" / ".env")
+load_dotenv(PROJECT_DIR / ".env")
 
 MONGO_URI = os.getenv("MONGO_URI") or os.getenv("MONGODB_URI")
 
-mongo_client = MongoClient(MONGO_URI) if MONGO_URI else None
+mongo_client = MongoClient(
+    MONGO_URI, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000,
+    socketTimeoutMS=10000,
+) if MONGO_URI else None
 mongo_db = mongo_client["event_command_center"] if mongo_client is not None else None
 feedback_collection = mongo_db["feedback"] if mongo_db is not None else None
 
 
 def init_db():
-    """Initialize indexes for the shared MongoDB collections."""
-    if mongo_db is None:
+    """Initialize indexes for the shared MongoDB feedback collection."""
+    if feedback_collection is None:
         return
     feedback_collection.create_index("timestamp")
     feedback_collection.create_index("anon_id")
@@ -25,7 +31,7 @@ def init_db():
 def save_feedback(anon_id, channel, raw_text, category="GENERAL", urgency="LOW", sentiment="NEUTRAL"):
     """Insert a new anonymous feedback document into MongoDB."""
     if feedback_collection is None:
-        return None
+        raise ConfigurationError("MongoDB is not configured. Set MONGO_URI in backend/.env.")
     document = {
         "anon_id": anon_id,
         "channel": channel,

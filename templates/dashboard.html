@@ -1,234 +1,528 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bagga Whisper - Live Organizer Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>Bagga Control Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #f0f2f5;
-            min-height: 100vh;
-        }
-
-        .badge-HIGH {
-            background-color: #dc3545;
-        }
-
-        .badge-MEDIUM {
-            background-color: #ffc107;
-            color: #000;
-        }
-
-        .badge-LOW {
-            background-color: #198754;
-        }
-
-        .stat-card {
-            border: none;
-            border-radius: 10px;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card {
+            background: #ffffff;
+            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 0 10px 0 rgba(15, 23, 42, 0.02);
         }
     </style>
 </head>
+<body class="bg-slate-100 text-slate-800 min-h-screen antialiased selection:bg-blue-600 selection:text-white">
 
-<body class="p-4">
-    <div class="container-fluid px-4">
-        <!-- Header Row -->
-        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-            <div>
-                <h2 class="fw-bold m-0">🎙️ Bagga Whisper - Live Operations Center</h2>
-                <small class="text-muted">Offline-First Event Attendee Feedback & Real-Time Intelligence</small>
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-200 bg-white/90 sticky top-0 backdrop-blur-md z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20">
+                    <div class="w-full h-full bg-blue-900 rounded-[14px] flex items-center justify-center">
+                        <i class="fa-solid fa-tower-broadcast text-cyan-400 text-lg"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-black tracking-tight text-slate-900">Bagga</h1>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> <span data-i18n="badge_live">FEEDBACK CENTER</span>
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium" data-i18n="subtitle">Two-Way Telecom & Real-time Event Analytics</p>
+                </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <a class="btn btn-outline-secondary" href="{{ url_for('home') }}">
-                    <i class="bi bi-house me-1"></i> Home
+
+            <div class="flex items-center gap-3">
+                <a href="/" class="text-xs font-bold text-blue-700">Home</a>
+                <a href="/attendee" class="text-xs font-bold text-blue-700">Submit feedback</a>
+                <!-- Language Selector Dropdown -->
+                <div class="relative inline-flex items-center">
+                    <i class="fa-solid fa-language text-blue-600 absolute left-3 pointer-events-none text-sm"></i>
+                    <select id="langSelect" onchange="changeLanguage(this.value)" class="pl-9 pr-8 py-2 text-xs font-bold text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 shadow-sm cursor-pointer appearance-none">
+                        <option value="en">English (EN)</option>
+                        <option value="lg">Luganda (LG)</option>
+                        <option value="sw">Kiswahili (SW)</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down text-slate-400 absolute right-3 pointer-events-none text-[10px]"></i>
+                </div>
+
+                <a href="/dashboard" class="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition duration-200 shadow-sm active:scale-95">
+                    <i class="fa-solid fa-arrows-rotate text-blue-600 group-hover:rotate-180 transition-transform duration-500"></i> <span data-i18n="btn_refresh">Refresh Stream</span>
                 </a>
-                <a class="btn btn-outline-primary" href="{{ url_for('dashboard') }}" aria-current="page">
-                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                </a>
-                <span class="badge bg-success fs-6"><i class="bi bi-shield-check me-1"></i> 100% Anonymous Feed</span>
-                <button class="btn btn-primary" onclick="location.reload()">
-                    🔄 Refresh Feed
-                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {% if database_error %}<p role="alert" class="rounded-xl bg-amber-100 text-amber-900 p-4">{{ database_error }}</p>{% endif %}
+
+        <!-- Metrics Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Card 1: Total Notes -->
+            <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-blue-400 hover:shadow-xl group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_total">Total Notes Submitted</p>
+                        <h3 class="text-4xl font-black text-slate-900 mt-2 tracking-tight">
+                            {{ stats.total_feedback if stats else (feedbacks|length) }}
+                        </h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-comments text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
+                    <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> <span data-i18n="stat_total_sub">Feedback collected across all channels</span>
+                </div>
+            </div>
+
+            <!-- Card 2: High Urgency -->
+            <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-amber-400 hover:shadow-xl group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_urgency">High Urgency Alerts</p>
+                        <h3 class="text-4xl font-black text-amber-600 mt-2 tracking-tight">
+                            {{ stats.high_urgency if stats else 0 }}
+                        </h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 mr-2 animate-ping"></span> <span data-i18n="stat_urgency_sub">Heuristic priority detection</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Captured Audience -->
+            <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-indigo-400 hover:shadow-xl group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_audience">Registered Attendees</p>
+                        <h3 class="text-4xl font-black text-indigo-600 mt-2 tracking-tight">
+                            {{ attendees|length }}
+                        </h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-users text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
+                    <i class="fa-solid fa-mobile-retro text-blue-600 mr-1.5"></i> <span data-i18n="stat_audience_sub">Contacts saved through invitations</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Broadcast SMS Banner -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-6 shadow-xl border border-blue-900">
+            <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-amber-400"></i>
+                        <h3 class="font-extrabold text-lg text-white" data-i18n="sms_banner_title">Customer reminders and updates</h3>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1" data-i18n="sms_banner_sub">Send a custom message or the saved event details from this dashboard.</p>
+                </div>
+
+                <form id="customerMessageForm" class="w-full md:max-w-lg space-y-3">
+                    <p id="smsMode" class="text-xs text-cyan-200" role="status">Checking SMS configuration…</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="text-xs font-bold">Message type
+                            <select name="type" class="block w-full mt-1 rounded-lg p-2 bg-slate-950 border border-slate-700">
+                                <option value="reminder">Reminder / thank you</option><option value="schedule">Schedule update</option><option value="urgent">Urgent update</option>
+                            </select>
+                        </label>
+                        <label class="text-xs font-bold">Send to
+                            <select name="audience" class="block w-full mt-1 rounded-lg p-2 bg-slate-950 border border-slate-700">
+                                <option value="attendees">Registered attendees</option><option value="speakers">Speakers</option><option value="team">Event team</option><option value="everyone">Everyone</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label for="smsInput" class="block text-xs font-bold">Your message</label>
+                    <textarea id="smsInput" name="message" maxlength="500" rows="3" required class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-sm" placeholder="Write a reminder, thank-you message or event update."></textarea>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="submit" class="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-sm">Send message</button>
+                        <button type="button" id="eventReminderButton" class="px-4 py-3 border border-slate-500 rounded-xl text-sm">Send saved event reminder to attendees</button>
+                    </div>
+                    <p id="messageStatus" role="status" aria-live="polite" class="text-sm text-cyan-200"></p>
+                </form>
             </div>
         </div>
 
-        <!-- Metric Cards Row -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card stat-card shadow-sm border-start border-primary border-4 p-3">
-                    <div class="text-muted small fw-bold">TOTAL FEEDBACK RECEIVED</div>
-                    <div class="fs-2 fw-bold text-dark">{{ feedbacks|length }}</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card stat-card shadow-sm border-start border-danger border-4 p-3">
-                    <div class="text-muted small fw-bold">HIGH URGENCY ISSUES</div>
-                    <div class="fs-2 fw-bold text-danger">
-                        {% set high_count = namespace(value=0) %}
-                        {% for f in feedbacks %}
-                        {% if f.urgency == 'HIGH' %}
-                        {% set high_count.value = high_count.value + 1 %}
-                        {% endif %}
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left Panel: Audience Directory -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass-card border border-slate-200 rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
+                        <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-address-book text-blue-600"></i> <span data-i18n="dir_title">Registered attendees</span>
+                        </h3>
+                        <span class="text-[10px] font-extrabold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                            {{ attendees|length }} <span data-i18n="tag_active">Active</span>
+                        </span>
+                    </div>
+
+                    <div class="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+                        {% for att in attendees %}
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-300 transition">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-black text-blue-700">{{ att.name }}</span>
+                                <span class="text-[10px] font-mono bg-white text-slate-600 px-2 py-0.5 rounded font-bold border border-slate-200 shadow-sm">
+                                    Registered
+                                </span>
+                            </div>
+                            <p class="text-xs font-mono text-slate-800 font-bold mb-3">{{ att.phone }}</p>
+
+                            <a href="#customerMessageForm" class="text-xs font-bold text-blue-700">Write an update for attendees →</a>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-8 text-slate-400 text-xs font-medium">
+                            <i class="fa-solid fa-users-slash text-2xl mb-2 text-slate-300"></i>
+                            <p data-i18n="empty_dir">No registered attendees yet.</p>
+                        </div>
                         {% endfor %}
-                        {{ high_count.value }}
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card stat-card shadow-sm border-start border-warning border-4 p-3">
-                    <div class="text-muted small fw-bold">ACTIVE CHANNELS</div>
-                    <div class="fs-2 fw-bold text-dark">USSD / VOICE</div>
+
+            <!-- Right Panel: Live Feed Stream -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-card border border-slate-200 rounded-2xl overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div>
+                            <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-comments text-blue-600"></i> <span data-i18n="feed_title">Live Feedback Feed</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="feed_sub">Feedback from SMS, USSD and the web. Refresh to load new notes.</p>
+                        </div>
+                        <span id="feedCounter" class="text-xs font-extrabold px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                            <span data-i18n="tag_count_prefix">Showing</span> {{ [3, feedbacks|length]|min }} <span data-i18n="tag_count_of">of</span> {{ feedbacks|length }}
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                    <th class="py-3.5 px-6" data-i18n="th_attendee">Attendee</th>
+                                    <th class="py-3.5 px-6" data-i18n="th_channel">Channel</th>
+                                    <th class="py-3.5 px-6" data-i18n="th_category">Category</th>
+                                    <th class="py-3.5 px-6" data-i18n="th_message">Message Note</th>
+                                    <th class="py-3.5 px-6" data-i18n="th_urgency">Urgency</th>
+
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-xs font-medium">
+                                {% for fb in feedbacks %}
+                                <tr class="feedback-row hover:bg-blue-50/30 transition {% if loop.index > 3 %}hidden{% endif %}">
+                                    <td class="py-4 px-6 font-black text-blue-700">{{ fb.anon_id or "Attendee" }}</td>
+                                    <td class="py-4 px-6">
+                                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-100 border border-slate-200 text-slate-700">
+                                            {{ fb.channel }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        {% if fb.category == 'PRAISE' %}
+                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" data-i18n="cat_praise">Praise</span>
+                                        {% elif fb.category in ['SOUND/AUDIO', 'AUDIO_LOGISTICS'] %}
+                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-50 text-amber-700 border border-amber-200" data-i18n="cat_sound">Sound / Audio</span>
+                                        {% elif fb.category in ['AC/FACILITIES', 'FACILITIES'] %}
+                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200" data-i18n="cat_facilities">Facilities</span>
+                                        {% else %}
+                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-600 border border-slate-200" data-i18n="cat_general">General Note</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-6 text-slate-900 font-bold max-w-xs leading-relaxed">{{ fb.raw_text }}</td>
+                                    <td class="py-4 px-6">
+                                        {% if fb.urgency == 'HIGH' %}
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> <span data-i18n="urgency_high">HIGH</span>
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500" >{{ fb.urgency }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-12 text-slate-400 text-xs font-medium">
+                                        <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300 block"></i>
+                                        <span data-i18n="empty_feed">No feedback submitted yet.</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- SHOW MORE / SHOW LESS BUTTON BAR -->
+                    {% if feedbacks|length > 3 %}
+                    <div class="p-4 bg-slate-50 border-t border-slate-200 text-center">
+                        <button id="toggleFeedBtn" onclick="toggleFeed()" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-extrabold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-xl transition duration-200 shadow-sm active:scale-95">
+                            <i id="toggleFeedIcon" class="fa-solid fa-chevron-down"></i>
+                            <span id="toggleFeedText" data-i18n="btn_show_more">Show All Submissions ({{ feedbacks|length }})</span>
+                        </button>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card stat-card shadow-sm border-start border-success border-4 p-3">
-                    <div class="text-muted small fw-bold">AI PARSING ENGINE</div>
-                    <div class="fs-2 fw-bold text-success">ONLINE</div>
-                </div>
-            </div>
+
         </div>
+    </main>
 
-        <!-- Main Content Area -->
-        <div class="row g-4">
-            <!-- Left Side: Main Feedback Feed -->
-            <div class="col-lg-9">
-                <div class="card shadow-sm border-0">
-                    <div
-                        class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center py-3">
-                        <span><i class="bi bi-broadcast me-2"></i> Live Attendee Feedback Stream</span>
-                        <span class="badge bg-secondary">Auto-Anonymized IDs</span>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Timestamp</th>
-                                        <th>Anonymous ID</th>
-                                        <th>Channel</th>
-                                        <th>Feedback Note</th>
-                                        <th>Category</th>
-                                        <th>Urgency</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in feedbacks %}
-                                    <tr>
-                                        <td><small class="text-muted">{{ item.timestamp }}</small></td>
-                                        <td><span class="badge bg-secondary font-monospace">{{ item.anon_id }}</span>
-                                        </td>
-                                        <td><span class="badge bg-outline-dark border text-dark">{{ item.channel
-                                                }}</span></td>
-                                        <td>{{ item.raw_text }}</td>
-                                        <td><span class="badge bg-info text-dark">{{ item.category }}</span></td>
-                                        <td><span class="badge badge-{{ item.urgency }}">{{ item.urgency }}</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-success"
-                                                onclick="rewardUser('{{ item.anon_id }}')">
-                                                🎁 Airtime
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="7" class="text-center p-5 text-muted">
-                                            No feedback received yet. Dial your USSD code to start testing!
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Side: System Status Panel -->
-            <div class="col-lg-3">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white fw-bold border-bottom">
-                        📡 Integration Gateways
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Africa's Talking USSD</span>
-                            <span class="badge bg-success">Active</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Gemini AI Engine</span>
-                            <span class="badge bg-success">Active</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Airtime Rewards API</span>
-                            <span class="badge bg-secondary">Sandbox</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span>Voice Hotline IVR</span>
-                            <span class="badge bg-success">Ready</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm border-0 bg-primary text-white p-3">
-                    <h6 class="fw-bold mb-2">💡 Quick Test Instructions</h6>
-                    <p class="small mb-2">Send a test USSD payload from your VS Code terminal:</p>
-                    <code
-                        class="d-block p-2 bg-dark text-light rounded small mb-2">curl -X POST http://127.0.0.1:5000/api/ussd -d "text=1"</code>
-                    <p class="small m-0">Then click <strong>Refresh Feed</strong> above!</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Client-Side Translation & Feed Toggle Script -->
     <script>
-        async function rewardUser(anonId) {
-            // 1. Confirmation Modal Prompt
-            const confirmSend = confirm(`Are you sure you want to send 500 UGX Airtime reward to ${anonId}?`);
-            if (!confirmSend) {
-                return; // User canceled the action
-            }
-
-            // 2. Safely capture the button element
-            const btn = event.currentTarget || event.target;
-            const originalText = btn.innerHTML;
-
-            btn.disabled = true;
-            btn.innerHTML = "⏳ Sending...";
-
+        const messageForm = document.getElementById('customerMessageForm');
+        const reminderButton = document.getElementById('eventReminderButton');
+        async function sendDashboardMessage(endpoint, payload) {
+            const status = document.getElementById('messageStatus');
+            const buttons = messageForm.querySelectorAll('button');
+            buttons.forEach(button => { button.disabled = true; });
+            status.textContent = 'Sending…';
             try {
-                // Brief artificial delay (300ms) to make the loading animation visible locally
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                const response = await fetch('/api/feedback/reward', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone_number: "+256700000000",
-                        amount: "500"
-                    })
+                const response = await fetch(endpoint, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
                 });
-
                 const data = await response.json();
+                if (!response.ok) throw new Error(data.error || data.message || 'Could not send.');
+                status.textContent = data.sent_count !== undefined
+                    ? `${data.sent_count} accepted, ${data.failed_count} failed.`
+                    : data.message;
+            } catch (error) { status.textContent = error.message; }
+            finally { buttons.forEach(button => { button.disabled = false; }); }
+        }
+        messageForm.addEventListener('submit', event => {
+            event.preventDefault();
+            const payload = Object.fromEntries(new FormData(messageForm));
+            payload.message = payload.message.trim();
+            if (!payload.message) { document.getElementById('messageStatus').textContent = 'Enter a message.'; return; }
+            sendDashboardMessage('/announcements', payload);
+        });
+        reminderButton.addEventListener('click', () => sendDashboardMessage('/reminders', {}));
+        fetch('/communications/status').then(response => {
+            if (!response.ok) throw new Error();
+            return response.json();
+        }).then(data => {
+            document.getElementById('smsMode').textContent = !data.sms_configured
+                ? 'SMS setup is needed before sending.'
+                : data.sms_environment === 'sandbox'
+                    ? 'Sandbox: messages appear in the Africa’s Talking simulator.'
+                    : 'Live SMS: messages will be sent to recipients’ phones.';
+        }).catch(() => { document.getElementById('smsMode').textContent = 'SMS configuration could not be checked.'; });
+        let isShowingAll = false;
+        const totalFeedbacks = {{ feedbacks|length }};
 
-                if (data.status === "success" || data.status === "simulated") {
-                    btn.className = "btn btn-sm btn-success";
-                    btn.innerHTML = "✅ Rewarded!";
-                } else {
-                    alert("Reward Error: " + data.message);
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
+        function toggleFeed() {
+            const hiddenRows = document.querySelectorAll('.feedback-row');
+            const btnText = document.getElementById('toggleFeedText');
+            const btnIcon = document.getElementById('toggleFeedIcon');
+            const feedCounter = document.getElementById('feedCounter');
+            const activeLang = localStorage.getItem('bagga_dashboard_lang') || 'en';
+            const dict = translations[activeLang] || translations.en;
+
+            isShowingAll = !isShowingAll;
+
+            hiddenRows.forEach((row, index) => {
+                if (index >= 3) {
+                    if (isShowingAll) {
+                        row.classList.remove('hidden');
+                    } else {
+                        row.classList.add('hidden');
+                    }
                 }
-            } catch (err) {
-                alert("Network error while processing airtime reward.");
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+            });
+
+            if (isShowingAll) {
+                btnText.textContent = dict.btn_show_less || "Show Top 3 Only";
+                btnIcon.className = "fa-solid fa-chevron-up";
+                feedCounter.innerHTML = `<span data-i18n="tag_count_prefix">${dict.tag_count_prefix}</span> ${totalFeedbacks} <span data-i18n="tag_count_of">${dict.tag_count_of}</span> ${totalFeedbacks}`;
+            } else {
+                btnText.textContent = `${dict.btn_show_more_prefix || "Show All Submissions"} (${totalFeedbacks})`;
+                btnIcon.className = "fa-solid fa-chevron-down";
+                feedCounter.innerHTML = `<span data-i18n="tag_count_prefix">${dict.tag_count_prefix}</span> 3 <span data-i18n="tag_count_of">${dict.tag_count_of}</span> ${totalFeedbacks}`;
             }
         }
+
+        const translations = {
+            en: {
+                badge_live: "FEEDBACK CENTER",
+                subtitle: "Two-Way Telecom & Real-time Event Analytics",
+                btn_refresh: "Refresh Stream",
+                stat_total: "Total Notes Submitted",
+                stat_total_sub: "Feedback collected across all channels",
+                stat_urgency: "High Urgency Alerts",
+                stat_urgency_sub: "Heuristic priority detection",
+                stat_audience: "Registered Attendees",
+                stat_audience_sub: "Contacts saved through invitations",
+                sms_banner_title: "Customer reminders and updates",
+                sms_banner_sub: "Send a custom message or the saved event details from this dashboard.",
+                sms_default_val: "Thank you for attending Bagga! Your participation and feedback made this event special.",
+                btn_send_sms: "Send SMS Blast",
+                dir_title: "Registered attendees",
+                tag_active: "Active",
+                tag_notes: "notes",
+                reply_placeholder: "Direct SMS reply...",
+                empty_dir: "No registered attendees yet.",
+                feed_title: "Live Feedback Feed",
+                feed_sub: "Feedback from SMS, USSD and the web. Refresh to load new notes.",
+                tag_count_prefix: "Showing",
+                tag_count_of: "of",
+                th_attendee: "Attendee",
+                th_channel: "Channel",
+                th_category: "Category",
+                th_message: "Message Note",
+                th_urgency: "Urgency",
+                th_action: "Action",
+                btn_delete: "Clear",
+                cat_praise: "Praise",
+                cat_sound: "Sound / Audio",
+                cat_facilities: "Facilities",
+                cat_general: "General Note",
+                urgency_high: "HIGH",
+                urgency_normal: "NORMAL",
+                empty_feed: "No feedback submitted yet.",
+                btn_show_more_prefix: "Show All Submissions",
+                btn_show_less: "Show Top 3 Only"
+            },
+            lg: {
+                badge_live: "OMUTIMBWA OULIVE",
+                subtitle: "Okwawulizagana kwaradio n'okwekeneenya ebyokwerinda",
+                btn_refresh: "Zzaamu Bupya",
+                stat_total: "Ebirowoozo Byaweebwa",
+                stat_total_sub: "Omutimbwa gukola ku USSD ya Africa's Talking",
+                stat_urgency: "Amawulire Amangu Ag'okwerinda",
+                stat_urgency_sub: "Okwawula eby'amangu ku eby eby'ambulidde",
+                stat_audience: "Abeetabi Abakwatiddwa",
+                stat_audience_sub: "Enombero z'essimu ezikwatiddwa buli kiseera",
+                sms_banner_title: "Sindika Obubaka Bw'okwebaza eri Buli Muntu",
+                sms_banner_sub: "Sindika obubaka bw'okwebaza eri ennamba z'essimu zonna ezikwatiddwa.",
+                sms_default_val: "Webale okwetaba mu Bagga! Ebirowoozo byammwe byatuyambye nnyo.",
+                btn_send_sms: "Sindika SMS Blast",
+                dir_title: "Ekitabo ky'Ennamba z'Essimu",
+                tag_active: "Mukulio",
+                tag_notes: "ebirowoozo",
+                reply_placeholder: "Ddamu ne SMS...",
+                empty_dir: "Tewali nnamba z'essimu zakakwatibwa.",
+                feed_title: "Amawulire Agayingira Amangu",
+                feed_sub: "Okulaga obubaka obuggya obukyaweebwa mu USSD",
+                tag_count_prefix: "Laga",
+                tag_count_of: "ku",
+                th_attendee: "Omeetabi",
+                th_channel: "Omukutu",
+                th_category: "Omuwendo gwa Kategoria",
+                th_message: "Obubaka bo",
+                th_urgency: "Obwangu",
+                th_action: "Kikolwa",
+                btn_delete: "Ggyamu",
+                cat_praise: "Okusiima",
+                cat_sound: "Edoboozi / Sound",
+                cat_facilities: "Eby'omukutu / AC",
+                cat_general: "Obubaka Obubulijjo",
+                urgency_high: "AMANGU",
+                urgency_normal: "BULIJJO",
+                empty_feed: "Tewali birowoozo biweebwa mangu guno.",
+                btn_show_more_prefix: "Laga Ebirowoozo Zonna",
+                btn_show_less: "Laga Ezisembyeeyo 3 Zokka"
+            },
+            sw: {
+                badge_live: "KITUO CHA MOJA KWA MOJA",
+                subtitle: "Uchanganuzi wa Matukio na Mawasiliano ya Simu",
+                btn_refresh: "Chesa Upya",
+                stat_total: "Jumla ya Maoni Yaliyotumwa",
+                stat_total_sub: "Mtandao unafanya kazi kupitia Africa's Talking USSD",
+                stat_urgency: "Taarifa za Dharura ya Juu",
+                stat_urgency_sub: "Utafutaji wa kipaumbele cha ujumbe",
+                stat_audience: "Watazamaji Waliorekodiwa",
+                stat_audience_sub: "Orodha ya nambari za simu zilizorekodiwa",
+                sms_banner_title: "Tuma Ujumbe wa Shukrani kwa Wote",
+                sms_banner_sub: "Tuma ujumbe wa moja kwa moja wa shukrani kwa nambari zote zilizorekodiwa.",
+                sms_default_val: "Asante kwa kuhudhuria Bagga! Ushiriki wako na maoni yako yamefanya tukio hili kuwa la pekee.",
+                btn_send_sms: "Tuma SMS kwa Wote",
+                dir_title: "Orodha ya Waliohudhuria",
+                tag_active: "Wanaofanya kazi",
+                tag_notes: "maoni",
+                reply_placeholder: "Jibu kwa SMS...",
+                empty_dir: "Hakuna nambari za simu zilizorekodiwa bado.",
+                feed_title: "Mtiririko wa Maoni ya Moja kwa Moja",
+                feed_sub: "Kuonyesha maoni ya hivi karibuni kupitia USSD menu",
+                tag_count_prefix: "Inaonyesha",
+                tag_count_of: "kati ya",
+                th_attendee: "Mshiriki",
+                th_channel: "Njia",
+                th_category: "Aina",
+                th_message: "Ujumbe",
+                th_urgency: "Dharura",
+                th_action: "Kitendo",
+                btn_delete: "Odoa",
+                cat_praise: "Sifa / Sifa",
+                cat_sound: "Sauti / Mfumo wa Sauti",
+                cat_facilities: "Vifaa na Majengo",
+                cat_general: "Ujumbe wa Kawaida",
+                urgency_high: "DHARURA",
+                urgency_normal: "KAWAIDA",
+                empty_feed: "Hakuna maoni yaliyowasilishwa bado.",
+                btn_show_more_prefix: "Onyesha Maoni Yote",
+                btn_show_less: "Onyesha Mapya 3 Tu"
+            }
+        };
+
+        function changeLanguage(lang) {
+            const dict = translations[lang] || translations.en;
+
+            document.documentElement.lang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) {
+                    el.textContent = dict[key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dict[key]) {
+                    el.setAttribute('placeholder', dict[key]);
+                }
+            });
+
+            const smsInput = document.getElementById('smsInput');
+            if (smsInput) {
+                smsInput.placeholder = dict.sms_default_val;
+            }
+
+            const btnText = document.getElementById('toggleFeedText');
+            if (btnText) {
+                if (isShowingAll) {
+                    btnText.textContent = dict.btn_show_less || "Show Top 3 Only";
+                } else {
+                    btnText.textContent = `${dict.btn_show_more_prefix || "Show All Submissions"} (${totalFeedbacks})`;
+                }
+            }
+
+            localStorage.setItem('bagga_dashboard_lang', lang);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('bagga_dashboard_lang') || 'en';
+            const langSelect = document.getElementById('langSelect');
+            if (langSelect) {
+                langSelect.value = savedLang;
+                changeLanguage(savedLang);
+            }
+        });
     </script>
 </body>
-
 </html>

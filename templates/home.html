@@ -103,6 +103,54 @@
             color: var(--ink);
         }
 
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown summary {
+            padding: 9px 14px;
+            border-radius: 10px;
+            color: var(--muted);
+            font-weight: 600;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .nav-dropdown summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .nav-dropdown summary::after {
+            content: "▾";
+            margin-left: 8px;
+        }
+
+        .nav-dropdown[open] summary,
+        .nav-dropdown summary:hover {
+            background: var(--panel-alt);
+            color: var(--ink);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 20;
+            display: grid;
+            min-width: 210px;
+            gap: 4px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--panel);
+            box-shadow: var(--shadow);
+        }
+
+        .nav .nav-dropdown-menu a {
+            color: var(--ink);
+            white-space: nowrap;
+        }
+
         .nav .primary-btn,
         .cta,
         .secondary-btn {
@@ -138,7 +186,7 @@
 
         .hero {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
+            grid-template-columns: 1fr;
             gap: 22px;
             margin-top: 28px;
             align-items: stretch;
@@ -153,19 +201,6 @@
 
         .hero-copy {
             padding: 34px 30px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-copy::after {
-            content: "";
-            position: absolute;
-            right: -30px;
-            top: -30px;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(27, 111, 95, 0.12), transparent 65%);
-            border-radius: 50%;
         }
 
         .eyebrow {
@@ -233,6 +268,11 @@
             letter-spacing: -0.06em;
         }
 
+        .metric-value.live-state {
+            font-size: 1.05rem;
+            letter-spacing: 0;
+        }
+
         .hero-side {
             display: grid;
             grid-template-rows: auto auto;
@@ -264,6 +304,11 @@
             box-shadow: 0 0 0 8px rgba(111, 234, 154, 0.18);
         }
 
+        .pulse[data-state="needs-setup"] {
+            background: var(--accent);
+            box-shadow: 0 0 0 8px rgba(243, 184, 94, 0.18);
+        }
+
         .kpi {
             font-size: 2.2rem;
             font-weight: 800;
@@ -288,6 +333,12 @@
             border: 1px solid var(--line);
             border-radius: 16px;
             padding: 18px 16px;
+            transition: 0.2s ease;
+        }
+
+        a.mini-panel:hover {
+            border-color: #bfd8d0;
+            transform: translateY(-1px);
         }
 
         .mini-label {
@@ -306,10 +357,172 @@
         }
 
         .content-grid {
-            display: grid;
-            grid-template-columns: 1.5fr 0.9fr;
-            gap: 22px;
+            display: none;
+        }
+
+        .communication-section {
             margin-top: 28px;
+        }
+
+        .communication-dashboard {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 16px;
+        }
+
+        .communication-column {
+            display: grid;
+            align-content: start;
+            gap: 16px;
+        }
+
+        .communication-tool {
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--panel);
+            box-shadow: var(--shadow);
+            scroll-margin-top: 100px;
+        }
+
+        .communication-tool h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .communication-tool details>summary {
+            cursor: pointer;
+        }
+
+        .communication-tool details[open]>summary {
+            margin-bottom: 12px;
+        }
+
+        .tool-description {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+
+        .control-form {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+            scroll-margin-top: 100px;
+        }
+
+        .control-form label {
+            display: grid;
+            gap: 6px;
+            color: var(--ink);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .control-form input,
+        .control-form select,
+        .control-form textarea {
+            width: 100%;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--ink);
+            font: inherit;
+            font-size: 0.92rem;
+        }
+
+        .control-form textarea {
+            min-height: 94px;
+            resize: vertical;
+        }
+
+        .control-form input:focus,
+        .control-form select:focus,
+        .control-form textarea:focus {
+            outline: 3px solid rgba(27, 111, 95, 0.18);
+            border-color: var(--primary);
+        }
+
+        .control-form button,
+        .tool-button {
+            min-height: 42px;
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #fff;
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .control-form button:disabled,
+        .tool-button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .status-line {
+            min-height: 1.35em;
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .status-line[data-state="success"] {
+            color: var(--primary);
+        }
+
+        .status-line[data-state="error"] {
+            color: var(--danger);
+        }
+
+        .weather-tool {
+            background: var(--accent-soft);
+            border-color: #f0d7a8;
+        }
+
+        .weather-forecast {
+            margin: 12px 0 6px;
+            color: var(--ink);
+            font-weight: 600;
+            line-height: 1.55;
+        }
+
+        .reminder-date {
+            color: #76551b;
+            font-size: 0.82rem;
+        }
+
+        .channel-list {
+            display: grid;
+            gap: 10px;
+            margin: 14px 0 0;
+        }
+
+        .channel-list div {
+            display: grid;
+            grid-template-columns: minmax(110px, 0.55fr) minmax(0, 1fr);
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+        }
+
+        .channel-list dt {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .channel-list dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+            font-size: 0.84rem;
         }
 
         .listing {
@@ -478,6 +691,14 @@
             border-radius: 12px;
             border: 1px solid var(--line);
             background: #fafdfc;
+            color: inherit;
+            text-decoration: none;
+            transition: 0.2s ease;
+        }
+
+        a.feature-item:hover {
+            background: var(--panel-alt);
+            border-color: #bfd8d0;
         }
 
         .icon {
@@ -529,6 +750,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .communication-dashboard {
+                grid-template-columns: 1fr;
+            }
+
             .stats {
                 grid-template-columns: repeat(2, minmax(150px, 1fr));
             }
@@ -551,6 +776,17 @@
                 text-align: center;
             }
 
+            .nav-dropdown {
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            .nav-dropdown-menu {
+                right: auto;
+                left: 0;
+                text-align: left;
+            }
+
             .stats {
                 grid-template-columns: 1fr;
             }
@@ -569,6 +805,8 @@
 </head>
 
 <body>
+{% if database_error %}<div role="alert" style="padding:16px;background:#fff3cd;color:#664d03">{{ database_error }}</div>{% endif %}
+
     <div class="shell">
         <header class="topbar">
             <div class="brand">
@@ -578,23 +816,23 @@
             <nav class="nav" aria-label="Main navigation">
                 <a href="{{ url_for('home') }}" aria-current="page">Home</a>
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a href="{{ url_for('sms_simulator') }}" class="secondary-btn">SMS test</a>
+                <a href="#weather-tool" class="secondary-btn">Remind attendees</a>
                 <a href="{{ url_for('attendee') }}" class="primary-btn">Submit feedback</a>
             </nav>
         </header>
 
         <section class="hero">
             <div class="panel hero-copy">
-                <div class="eyebrow">Live event intelligence</div>
-                <h1>Hear what attendees feel in real time.</h1>
+                <div class="eyebrow">Organizer overview</div>
+                <h1>Run event communications from one place.</h1>
                 <p class="lead">
-                    Capture anonymous feedback, route it to the right team, and keep the event experience smooth with a
-                    clean operations dashboard designed for live updates.
+                    Set event details, keep attendees and speakers updated, and respond to feedback from one organizer
+                    workspace.
                 </p>
 
                 <div class="actions">
                     <a class="cta" href="{{ url_for('attendee') }}">Submit feedback</a>
-                    <a class="secondary-btn" href="{{ url_for('sms_simulator') }}">Test SMS</a>
+                    <a class="secondary-btn" href="#weather-tool">Remind attendees</a>
                     <a class="secondary-btn" href="{{ url_for('dashboard') }}">View reports</a>
                 </div>
 
@@ -616,38 +854,16 @@
                         </div>
                     </div>
                     <div class="metric">
-                        <div class="metric-label">Channels</div>
-                        <div class="metric-value">3</div>
+                        <div class="metric-label">Event setup</div>
+                        <div id="event-metric" class="metric-value live-state">Checking</div>
                     </div>
                     <div class="metric">
-                        <div class="metric-label">Status</div>
-                        <div class="metric-value">Live</div>
+                        <div class="metric-label">SMS channel</div>
+                        <div id="sms-metric" class="metric-value live-state">Checking</div>
                     </div>
                 </div>
             </div>
 
-            <div class="panel hero-side">
-                <div class="status-card">
-                    <div class="status-head">
-                        <span>System health</span>
-                        <span class="pulse" aria-label="active"></span>
-                    </div>
-                    <div class="mini-note">Anonymous feedback flow</div>
-                    <div class="kpi">99.4%</div>
-                    <div class="mini-note">Operational uptime across USSD, voice, and AI routing.</div>
-                </div>
-
-                <div class="quick-links">
-                    <div class="mini-panel">
-                        <div class="mini-label">Avg. response</div>
-                        <div class="mini-value">2 min</div>
-                    </div>
-                    <div class="mini-panel">
-                        <div class="mini-label">Issues open</div>
-                        <div class="mini-value">8</div>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <section class="content-grid">
@@ -675,8 +891,7 @@
                         </div>
                     </a>
                     {% else %}
-                    <div class="empty-state">No feedback has been captured yet. Start by submitting a report from the
-                        dashboard.</div>
+                    <div class="empty-state">No attendee feedback has been received yet.</div>
                     {% endfor %}
                 </div>
             </div>
@@ -684,37 +899,402 @@
             <aside class="aside">
                 <div class="panel aside-card">
                     <div class="section-head">
-                        <h2>Quick actions</h2>
-                        <span class="badge warning">Live</span>
+                        <h2>Organizer shortcuts</h2>
+                        <span class="badge warning">Tools</span>
                     </div>
 
                     <div class="feature-list">
-                        <div class="feature-item">
+                        <a class="feature-item" href="{{ url_for('dashboard') }}">
                             <div class="icon">✓</div>
                             <div>
                                 <strong>Review feedback</strong>
                                 <span>Check incoming feedback and tag issues instantly.</span>
                             </div>
-                        </div>
-                        <div class="feature-item">
+                        </a>
+                        <a class="feature-item" href="{{ url_for('dashboard') }}">
                             <div class="icon">⚡</div>
                             <div>
                                 <strong>Prioritize issues</strong>
                                 <span>Use urgency levels to route problems to the right team.</span>
                             </div>
-                        </div>
-                        <div class="feature-item">
+                        </a>
+                        <a class="feature-item" href="{{ url_for('dashboard') }}">
                             <div class="icon">✦</div>
                             <div>
                                 <strong>Keep the experience smooth</strong>
                                 <span>Follow real-time signals and act before problems spread.</span>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </aside>
         </section>
+
+        <section class="communication-section" aria-labelledby="communication-title">
+            <div class="section-head">
+                <div>
+                    <h2 id="communication-title">Event communications</h2>
+                    <p class="lead">Manage event details and send updates to attendees and event teams.</p>
+                </div>
+            </div>
+
+            <div class="communication-dashboard">
+                <div class="communication-column">
+                    <article class="communication-tool">
+                        <h3>Event details</h3>
+                        <p class="tool-description">Set the event location and date for weather-aware invitations and
+                            reminders. Speakers are notified by SMS whenever the saved schedule changes.</p>
+                        <form id="event-form" class="control-form">
+                            <label for="event-name">Event name
+                                <input id="event-name" name="event_name" placeholder="Bagga Summit" required>
+                            </label>
+                            <label for="event-venue">Event venue
+                                <input id="event-venue" name="venue" maxlength="200" placeholder="Sheraton Kampala, Victoria Ballroom" required>
+                            </label>
+                            <label for="event-location">City or town (Uganda, for weather)
+                                <input id="event-location" name="location" autocomplete="address-level2"
+                                    placeholder="Kampala, Uganda" required>
+                            </label>
+                            <label for="event-date">Event date
+                                <input id="event-date" name="date" type="date" required>
+                            </label>
+                            <label for="event-schedule">Event schedule
+                                <textarea id="event-schedule" name="schedule" maxlength="500"
+                                    placeholder="Keynote at 10:00; lunch at 13:00"></textarea>
+                            </label>
+                            <button type="submit">Save event and notify speakers</button>
+                            <p id="event-status" class="status-line" aria-live="polite"></p>
+                        </form>
+                    </article>
+
+                    <article class="communication-tool">
+                        <details id="customer-updates-panel">
+                            <summary>
+                                <h3>Customer reminders and updates</h3>
+                            </summary>
+                            <p class="tool-description">Write a custom reminder or update and send it to registered attendees, event teams, or both. Messages send when you click the button.</p>
+                            <span id="customer-updates"></span>
+                            <form id="announcement-form" class="control-form">
+                                <label for="announcement-type">Message type
+                                    <select id="announcement-type" name="type">
+                                        <option value="reminder">Reminder</option>
+                                        <option value="schedule">Schedule update</option>
+                                        <option value="urgent">Urgent announcement</option>
+                                    </select>
+                                </label>
+                                <label for="announcement-audience">Send to
+                                    <select id="announcement-audience" name="audience">
+                                        <option value="attendees">Attendees</option>
+                                        <option value="speakers">Speakers</option>
+                                        <option value="team">Event team</option>
+                                        <option value="everyone">Everyone</option>
+                                    </select>
+                                </label>
+                                <label for="announcement-message">Message
+                                    <textarea id="announcement-message" name="message" maxlength="500"
+                                        placeholder="Reminder: please arrive at Sheraton Kampala by 9:00 AM EAT." required></textarea>
+                                </label>
+                                <button type="submit">Send message</button>
+                                <p id="announcement-status" class="status-line" aria-live="polite"></p>
+                            </form>
+                        </details>
+                    </article>
+                </div>
+
+                <div class="communication-column">
+                    <article class="communication-tool">
+                        <details>
+                            <summary>
+                                <h3>Invite an attendee</h3>
+                            </summary>
+                            <p class="tool-description">Register an attendee and send a check-in code by SMS.</p>
+                            <p id="sandbox-invite-help" class="tool-description" hidden>Sandbox invitations appear in the
+                                <a href="https://simulator.africastalking.com:1517/" target="_blank" rel="noopener noreferrer">Africa’s Talking simulator</a>.
+                                Open it first and use the same phone number below.</p>
+                            <form id="guest-form" class="control-form">
+                                <label for="guest-name">Attendee name
+                                    <input id="guest-name" name="name" autocomplete="name" required>
+                                </label>
+                                <label for="guest-phone">Phone number
+                                    <input id="guest-phone" name="phone" type="tel" autocomplete="tel"
+                                        placeholder="+256700000000" required>
+                                </label>
+                                <button type="submit">Register and send invite</button>
+                                <p id="guest-status" class="status-line" aria-live="polite"></p>
+                            </form>
+                        </details>
+                    </article>
+
+                    <article class="communication-tool">
+                        <details>
+                            <summary>
+                                <h3>Notify a speaker or team contact</h3>
+                            </summary>
+                            <p class="tool-description">Save a contact and send their role or session assignment.</p>
+                            <form id="team-form" class="control-form">
+                                <label for="team-kind">Contact type
+                                    <select id="team-kind" name="kind">
+                                        <option value="speaker">Speaker</option>
+                                        <option value="team">Event team</option>
+                                    </select>
+                                </label>
+                                <label for="team-name">Name
+                                    <input id="team-name" name="name" autocomplete="name" required>
+                                </label>
+                                <label for="team-phone">Phone number
+                                    <input id="team-phone" name="phone" type="tel" autocomplete="tel"
+                                        placeholder="+256700000000" required>
+                                </label>
+                                <label for="team-post">Role or session
+                                    <input id="team-post" name="post" placeholder="Opening keynote" required>
+                                </label>
+                                <button type="submit">Save and notify</button>
+                                <p id="team-status" class="status-line" aria-live="polite"></p>
+                            </form>
+                        </details>
+                    </article>
+
+                    <article class="communication-tool">
+                        <h3>Attendee feedback channels</h3>
+                        <p class="tool-description">Feedback from SMS and USSD is saved to the same dashboard feed.</p>
+                        <dl class="channel-list">
+                            <div>
+                                <dt>SMS callback</dt>
+                                <dd id="sms-callback-url">/api/sms</dd>
+                            </div>
+                            <div>
+                                <dt>SMS number</dt>
+                                <dd id="sms-feedback-number">Not configured</dd>
+                            </div>
+                            <div>
+                                <dt>USSD service code</dt>
+                                <dd id="ussd-service-code">Not configured</dd>
+                            </div>
+                            <div>
+                                <dt>USSD callback</dt>
+                                <dd id="ussd-callback-url">/api/ussd</dd>
+                            </div>
+                        </dl>
+                        <p id="feedback-channel-status" class="status-line" aria-live="polite"></p>
+                    </article>
+
+                    <article id="weather-tool" class="communication-tool weather-tool">
+                        <h3>Remind attendees</h3>
+                        <p class="tool-description">Send all registered attendees the event name, date, location, schedule and their check-in code. Weather is included when available. Click below to send now; reminders are not automatic.</p>
+                        <p id="weather-forecast" class="weather-forecast" aria-live="polite">Set an event location and
+                            date to load its forecast.</p>
+                        <p class="reminder-date">Recommended send date, one day before: <output id="reminder-date">Not
+                                set</output></p>
+                        <button id="send-reminders" class="tool-button" type="button">Send event reminders</button>
+                        <p id="reminder-status" class="status-line" aria-live="polite"></p>
+                    </article>
+                </div>
+            </div>
+        </section>
     </div>
+    <script>
+        function openCustomerUpdates() {
+            if (window.location.hash === '#customer-updates') {
+                document.getElementById('customer-updates-panel').open = true;
+                document.getElementById('customer-updates-panel').scrollIntoView();
+            }
+        }
+        window.addEventListener('hashchange', openCustomerUpdates);
+        window.addEventListener('DOMContentLoaded', openCustomerUpdates);
+
+        const eventForm = document.querySelector('#event-form');
+        const eventDateInput = document.querySelector('#event-date');
+        const eventStatus = document.querySelector('#event-status');
+        const weatherForecast = document.querySelector('#weather-forecast');
+        const reminderDate = document.querySelector('#reminder-date');
+        const reminderButton = document.querySelector('#send-reminders');
+        const smsMetric = document.querySelector('#sms-metric');
+        const eventMetric = document.querySelector('#event-metric');
+        const smsFeedbackNumber = document.querySelector('#sms-feedback-number');
+        const ussdServiceCode = document.querySelector('#ussd-service-code');
+        const smsCallbackUrl = document.querySelector('#sms-callback-url');
+        const ussdCallbackUrl = document.querySelector('#ussd-callback-url');
+        const feedbackChannelStatus = document.querySelector('#feedback-channel-status');
+
+        const localToday = new Date();
+        localToday.setMinutes(localToday.getMinutes() - localToday.getTimezoneOffset());
+        eventDateInput.min = localToday.toISOString().slice(0, 10);
+
+        function setStatus(element, message, state = '') {
+            element.textContent = message;
+            element.dataset.state = state;
+        }
+
+        async function requestJson(url, options = {}) {
+            const response = await fetch(url, options);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || data.message || `Request failed (${response.status}).`);
+            }
+            return data;
+        }
+
+        async function refreshWeather() {
+            reminderDate.textContent = 'Not set';
+            try {
+                const data = await requestJson('/weather');
+                weatherForecast.textContent = data.forecast;
+                reminderDate.textContent = data.reminder_date;
+            } catch (error) {
+                weatherForecast.textContent = error.message;
+            }
+        }
+
+        eventForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const button = eventForm.querySelector('button[type="submit"]');
+            button.disabled = true;
+            setStatus(eventStatus, 'Saving event details...');
+            try {
+                const data = await requestJson('/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_name: eventForm.elements.event_name.value,
+                        location: eventForm.elements.location.value,
+                        venue: eventForm.elements.venue.value,
+                        date: eventForm.elements.date.value,
+                        schedule: eventForm.elements.schedule.value
+                    })
+                });
+                eventMetric.textContent = 'Configured';
+                const notification = data.speaker_notifications;
+                let saveMessage = `Event saved for ${[data.venue, data.location_name].filter(Boolean).join(', ')} on ${data.date}.`;
+                let saveState = 'success';
+                if (notification?.status === 'sent') {
+                    saveMessage += ` ${notification.sent_count} speaker(s) notified.`;
+                } else if (notification?.status === 'partial') {
+                    saveMessage += ` ${notification.sent_count} speaker(s) notified; ${notification.failed_count} failed.`;
+                    saveState = 'error';
+                } else if (notification?.status === 'sms_not_configured') {
+                    saveMessage += ' Add SMS credentials to notify speakers.';
+                } else if (notification?.status === 'no_speakers') {
+                    saveMessage += ' No speaker contacts are registered yet.';
+                }
+                setStatus(eventStatus, saveMessage, saveState);
+                await refreshWeather();
+            } catch (error) {
+                setStatus(eventStatus, error.message, 'error');
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        async function loadSavedEvent() {
+            try {
+                const data = await requestJson('/event');
+                eventForm.elements.event_name.value = data.event_name || '';
+                eventForm.elements.location.value = data.location_name;
+                eventForm.elements.venue.value = data.venue || '';
+                eventForm.elements.date.value = data.date;
+                eventForm.elements.schedule.value = data.schedule || '';
+                eventMetric.textContent = 'Configured';
+                setStatus(eventStatus, 'Saved event details loaded.', 'success');
+                await refreshWeather();
+            } catch (error) {
+                eventMetric.textContent = 'Not set';
+                setStatus(eventStatus, error.message);
+                await refreshWeather();
+            }
+        }
+
+        async function loadCommunicationsStatus() {
+            try {
+                const data = await requestJson('/communications/status');
+                smsMetric.textContent = data.sms_configured ? (data.sms_environment === 'sandbox' ? 'Sandbox' : 'Configured') : 'Setup needed';
+                document.querySelector('#sandbox-invite-help').hidden = data.sms_environment !== 'sandbox';
+                smsFeedbackNumber.textContent = data.sms_feedback_number || 'Set AT_SMS_FEEDBACK_NUMBER';
+                ussdServiceCode.textContent = data.ussd_code || 'Set AT_USSD_CODE';
+                smsCallbackUrl.textContent = `${window.location.origin}/api/sms`;
+                ussdCallbackUrl.textContent = `${window.location.origin}/api/ussd`;
+                const channelsReady = data.sms_configured && data.sms_feedback_number && data.ussd_code;
+                setStatus(
+                    feedbackChannelStatus,
+                    channelsReady
+                        ? 'Configure these callback URLs with Africa\'s Talking to receive SMS and USSD feedback.'
+                        : 'Set SMS credentials, AT_SMS_FEEDBACK_NUMBER, and AT_USSD_CODE to activate attendee channels.'
+                );
+                if (data.storage_configured) {
+                    await loadSavedEvent();
+                } else {
+                    eventMetric.textContent = 'Setup needed';
+                    setStatus(eventStatus, 'Set MONGO_URI to save event details.');
+                    weatherForecast.textContent = 'Configure MongoDB and an event to load its forecast.';
+                }
+            } catch (error) {
+                smsMetric.textContent = 'Unavailable';
+                eventMetric.textContent = 'Unavailable';
+                setStatus(eventStatus, error.message, 'error');
+            }
+        }
+
+        function connectForm(formId, endpoint, statusId, successMessage) {
+            const form = document.querySelector(`#${formId}`);
+            const status = document.querySelector(`#${statusId}`);
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const button = form.querySelector('button[type="submit"]');
+                button.disabled = true;
+                setStatus(status, 'Sending...');
+                const values = Object.fromEntries(new FormData(form));
+                try {
+                    const data = await requestJson(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(values)
+                    });
+                    setStatus(status, data.message || successMessage, 'success');
+                    form.reset();
+                } catch (error) {
+                    setStatus(status, error.message, 'error');
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        }
+
+        connectForm('guest-form', '/guests', 'guest-status', 'Attendee invited.');
+        connectForm('team-form', '/ushers', 'team-status', 'Team contact notified.');
+
+        connectForm('announcement-form', '/announcements', 'announcement-status', 'Announcement sent.');
+
+        document.querySelectorAll('.nav-dropdown-menu a[href^="#"]').forEach((link) => {
+            link.addEventListener('click', () => {
+                const target = document.querySelector(link.getAttribute('href'));
+                const disclosure = target?.closest('details');
+                if (disclosure) {
+                    disclosure.open = true;
+                }
+            });
+        });
+
+        reminderButton.addEventListener('click', async () => {
+            reminderButton.disabled = true;
+            setStatus(document.querySelector('#reminder-status'), 'Loading forecast and sending reminders...');
+            try {
+                const result = await requestJson('/reminders', { method: 'POST' });
+                if (!result.results || result.results.length === 0) {
+                    setStatus(document.querySelector('#reminder-status'), result.message || 'No attendees to remind.');
+                } else {
+                    const sentCount = result.results.filter((item) => item.status === 'sent').length;
+                    const failedCount = result.results.filter((item) => item.status === 'failed').length;
+                    const state = failedCount ? 'error' : 'success';
+                    setStatus(document.querySelector('#reminder-status'), `${sentCount} sent, ${failedCount} failed. ${result.forecast}`, state);
+                }
+            } catch (error) {
+                setStatus(document.querySelector('#reminder-status'), error.message, 'error');
+            } finally {
+                reminderButton.disabled = false;
+            }
+        });
+
+        loadCommunicationsStatus();
+    </script>
 </body>
 
 </html>

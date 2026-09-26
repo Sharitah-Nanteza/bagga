@@ -4,22 +4,23 @@ import os
 import random
 import string
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import africastalking
 import requests
 from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
-from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
+from database import MONGO_URI, get_all_feedback, mongo_client, mongo_db, save_feedback
 from ai_engine import analyze_feedback
-from database import get_all_feedback, save_feedback
 
 # Load the backend configuration even when Flask is started from the project root.
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 username = os.getenv("AT_USERNAME")
 api_key = os.getenv("AT_API_KEY")
-mongo_uri = os.getenv("MONGO_URI")
+mongo_uri = MONGO_URI
 sms_simulator = os.getenv("AT_SMS_SIMULATOR", "true").lower() in {"1", "true", "yes", "on"}
 
 # Initialize Africa's Talking
@@ -28,10 +29,9 @@ if username and api_key:
 sms = africastalking.SMS
 airtime = africastalking.Airtime
 
-# Initialize MongoDB
-if mongo_uri:
-    mongo_client = MongoClient(mongo_uri)
-    db = mongo_client["event_command_center"]
+# Reuse the connection initialized by database.py for all collections.
+if mongo_db is not None:
+    db = mongo_db
     guests_collection = db["guests"]
     event_collection = db["event_config"]
     ushers_collection = db["ushers"]
@@ -46,10 +46,18 @@ else:
     tasks_collection = None
     contributions_collection = None
 
+WEATHER_TIMEZONE = "Africa/Nairobi"
+EAST_AFRICA_TIME = ZoneInfo(WEATHER_TIMEZONE)
+
 PAYMENT_PRODUCT_NAME = "EventContributions"
 PAYMENTS_SANDBOX_URL = "https://payments.sandbox.africastalking.com/mobile/checkout/request"
 
 feedback_bp = Blueprint("feedback_bp", __name__)
+
+
+@feedback_bp.errorhandler(PyMongoError)
+def database_unavailable(error):
+    return jsonify({"error": "MongoDB is unavailable. Check the database connection and try again."}), 503
 
 
 def send_sms(message, phone_numbers):
@@ -65,7 +73,14 @@ def send_sms(message, phone_numbers):
         raise RuntimeError("Africa's Talking SMS is not configured. Set AT_USERNAME and AT_API_KEY in .env, then restart Flask.")
     if not phone_numbers or any(not str(phone).strip() for phone in phone_numbers):
         raise ValueError("At least one valid phone number is required.")
-    return sms.send(message, [str(phone).strip() for phone in phone_numbers])
+    response = sms.send(message, [str(phone).strip() for phone in phone_numbers], timeout=(5, 15))
+    recipients = response.get("SMSMessageData", {}).get("Recipients", [])
+    if len(recipients) != len(phone_numbers) or any(
+        recipient.get("status") != "Success" for recipient in recipients
+    ):
+        statuses = ", ".join(str(item.get("status", "Unknown")) for item in recipients)
+        raise RuntimeError("Africa's Talking did not accept the SMS: " + (statuses or "no recipient confirmation"))
+    return response
 
 
 def _error(message, status=400):
@@ -79,9 +94,18 @@ def get_event_config():
     return event_collection.find_one({"_id": "current_event"})
 
 
+def sms_is_configured():
+    return bool(username and api_key)
+
+
 def generate_code(length=6):
     """Generate a random alphanumeric code, e.g. 'A1B2C3'."""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+
+def event_venue(event):
+    """Keep the exact venue separate from the city used for weather."""
+    return ", ".join(value for value in [event.get("venue"), event.get("location_name")] if value)
 
 
 def geocode_location(location_name):
@@ -92,7 +116,7 @@ def geocode_location(location_name):
     """
     try:
         url = "https://geocoding-api.open-meteo.com/v1/search"
-        params = {"name": location_name, "count": 1}
+        params = {"name": location_name.strip(), "count": 1, "language": "en", "countryCode": "UG"}
         response = requests.get(url, params=params, timeout=5)
         data = response.json()
 
@@ -101,6 +125,8 @@ def geocode_location(location_name):
             return None, None, None
 
         result = results[0]
+        if result.get("country_code") != "UG":
+            return None, None, None
         lat = result["latitude"]
         lon = result["longitude"]
         resolved_name = f"{result.get('name')}, {result.get('country', '')}".strip(", ")
@@ -127,11 +153,12 @@ def get_weather_blurb():
             "latitude": config["lat"],
             "longitude": config["lon"],
             "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max",
-            "timezone": "auto",
+            "timezone": WEATHER_TIMEZONE,
             "start_date": config["date"],
             "end_date": config["date"],
         }
         response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
         data = response.json()
 
         daily = data.get("daily", {})
@@ -142,7 +169,7 @@ def get_weather_blurb():
         if max_temp is None:
             return ""
 
-        blurb = f"Weather in {config['location_name']} on event day: {min_temp}-{max_temp}°C"
+        blurb = f"Forecast in {config['location_name']} for {config['date']} (EAT, UTC+3): {min_temp}-{max_temp}°C"
         if rain_chance is not None:
             blurb += f", {rain_chance}% chance of rain"
         return blurb
@@ -183,33 +210,97 @@ def set_event():
     if not data or 'location' not in data or 'date' not in data:
         return jsonify({"error": "Missing 'location' or 'date' in request"}), 400
 
+    if event_collection is None:
+        return jsonify({"error": "MongoDB is not configured. Set MONGO_URI to save event details."}), 503
+
+    venue = str(data.get('venue', '')).strip()
+    if len(venue) > 200:
+        return jsonify({"error": "Venue must be 200 characters or fewer."}), 400
     location_name_input = str(data['location']).strip()
+    event_date = str(data['date']).strip()
+    event_name = str(data.get('event_name', '')).strip() or 'Bagga event'
+    schedule = str(data.get('schedule', '')).strip()
     if not location_name_input:
-        return _error('Location is required.')
-    date = data['date']
+        return jsonify({"error": "Enter an event location."}), 400
+    if len(schedule) > 500:
+        return jsonify({"error": "Event schedule must be 500 characters or fewer."}), 400
+
+    try:
+        parsed_date = datetime.date.fromisoformat(event_date)
+    except ValueError:
+        return jsonify({"error": "Enter a valid event date."}), 400
+
+    if parsed_date < datetime.datetime.now(EAST_AFRICA_TIME).date():
+        return jsonify({"error": "The event date must be today or later."}), 400
 
     lat, lon, resolved_name = geocode_location(location_name_input)
 
     if lat is None:
-        return jsonify({"error": f"Could not find coordinates for '{location_name_input}'"}), 404
+        return jsonify({"error": f"Could not find '{location_name_input}'. Enter a Ugandan city or town, such as Kampala, Uganda, instead of a hotel name. Your previous event location is unchanged."}), 404
+
+    # Fetch the OLD config before we overwrite it, so schedule_changed can
+    # actually compare old vs. new. Must happen before update_one() below.
+    previous_config = get_event_config()
 
     event_collection.update_one(
         {"_id": "current_event"},
         {"$set": {
             "location_name": resolved_name,
+            "venue": venue,
             "lat": lat,
             "lon": lon,
-            "date": date
+            "date": event_date,
+            "schedule": schedule,
+            "event_name": event_name
         }},
         upsert=True
     )
 
+    speaker_notifications = {"status": "not_needed", "sent_count": 0, "failed_count": 0}
+    schedule_changed = bool(
+        (schedule or (previous_config and previous_config.get("schedule")))
+        and (
+            not previous_config
+            or previous_config.get("schedule") != schedule
+            or previous_config.get("date") != event_date
+            or previous_config.get("location_name") != resolved_name
+            or previous_config.get("event_name") != event_name
+            or previous_config.get("venue", "") != venue
+        )
+    )
+    if schedule_changed:
+        if not sms_is_configured():
+            speaker_notifications["status"] = "sms_not_configured"
+        elif ushers_collection is None:
+            speaker_notifications["status"] = "storage_not_configured"
+        else:
+            speakers = [
+                contact for contact in ushers_collection.find({}, {"_id": 0})
+                if contact.get("kind") == "speaker" and contact.get("phone")
+            ]
+            if not speakers:
+                speaker_notifications["status"] = "no_speakers"
+            else:
+                for speaker in speakers:
+                    schedule_details = schedule or "The previous schedule has been cleared."
+                    message = f"Schedule update for {event_name} on {event_date} at {event_venue({"venue": venue, "location_name": resolved_name})}: {schedule_details}"
+                    try:
+                        sms.send(message, [speaker["phone"]])
+                        speaker_notifications["sent_count"] += 1
+                    except Exception:
+                        speaker_notifications["failed_count"] += 1
+                speaker_notifications["status"] = "sent" if not speaker_notifications["failed_count"] else "partial"
+
     return jsonify({
         "message": "Event location and date saved.",
+        "event_name": event_name,
         "location_name": resolved_name,
+        "venue": venue,
         "lat": lat,
         "lon": lon,
-        "date": date
+        "date": event_date,
+        "schedule": schedule,
+        "speaker_notifications": speaker_notifications
     }), 200
 
 
@@ -223,6 +314,37 @@ def view_event():
     return jsonify(config), 200
 
 
+@feedback_bp.route('/weather', methods=['GET'])
+def event_weather():
+    """Return the configured event forecast and its one-day-before reminder date."""
+    config = get_event_config()
+    if not config:
+        return jsonify({"error": "Configure an event before checking its forecast."}), 404
+
+    try:
+        reminder_date = (
+            datetime.date.fromisoformat(config['date']) - datetime.timedelta(days=1)
+        ).isoformat()
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "The saved event date is invalid."}), 500
+
+    forecast = get_weather_blurb()
+    if not forecast:
+        return jsonify({
+            "error": "The forecast is not available yet for this event date or location.",
+            "reminder_date": reminder_date
+        }), 502
+
+    return jsonify({
+        "forecast": forecast,
+        "timezone": WEATHER_TIMEZONE,
+        "timezone_label": "EAT (UTC+3)",
+        "reminder_date": reminder_date,
+        "event_date": config['date'],
+        "location_name": config['location_name']
+    }), 200
+
+
 @feedback_bp.route('/guests', methods=['POST'])
 def register_guest():
     """
@@ -233,12 +355,27 @@ def register_guest():
     if not data or 'name' not in data or 'phone' not in data:
         return jsonify({"error": "Missing 'name' or 'phone' in request"}), 400
 
-    name = data['name']
-    phone = data['phone']
+    if guests_collection is None:
+        return jsonify({"error": "MongoDB is not configured. Set MONGO_URI to register attendees."}), 503
+    if not sms_is_configured():
+        return jsonify({"error": "SMS is not configured. Set AT_USERNAME and AT_API_KEY."}), 503
+
+    name = str(data['name']).strip()
+    phone = str(data['phone']).strip()
+    if not name or not phone:
+        return jsonify({"error": "Enter both a name and phone number."}), 400
 
     code = generate_code()
     while guests_collection.find_one({"code": code}):
         code = generate_code()
+
+    event = get_event_config()
+    event_details = f" Event: {event['date']} at {event_venue(event)}." if event else ""
+    message = f"Hi {name}, you're invited! Your check-in code is: {code}.{event_details}"
+
+    weather = get_weather_blurb()
+    if weather:
+        message += f". {weather}"
 
     guest = {
         "name": name,
@@ -246,25 +383,25 @@ def register_guest():
         "code": code,
         "checked_in": False,
         "checked_in_at": None,
-        "checked_in_by": None
+        "checked_in_by": None,
+        "invite_message": message,
+        "sms_status": "pending"
     }
     guests_collection.insert_one(guest)
 
-    event = get_event_config()
-    event_details = f" Event: {event['date']} at {event['location_name']}." if event else ""
-    message = f"Hi {name}, you're invited! Your check-in code is: {code}.{event_details}"
-
-    weather = get_weather_blurb()
-    if weather:
-        message += f". {weather}"
-
     try:
         sms_response = send_sms(message, [phone])
+        guests_collection.update_one({"code": code}, {"$set": {"sms_status": "sent"}})
     except Exception as e:
+        guests_collection.update_one({"code": code}, {"$set": {"sms_status": "failed"}})
         return jsonify({"error": f"Guest saved but SMS failed: {str(e)}"}), 500
 
+    guest["sms_status"] = "sent"
     return jsonify({
-        "message": "Guest registered and invite sent.",
+        "message": (
+            "Guest registered. Invitation accepted by Africa's Talking sandbox. Check the simulator using the same phone number."
+            if username == "sandbox" else "Guest registered and invite sent."
+        ),
         "guest": {k: v for k, v in guest.items() if k != "_id"},
         "sms_response": sms_response
     }), 201
@@ -310,7 +447,7 @@ def upload_guests():
         guests_collection.insert_one(guest)
         try:
             event = get_event_config()
-            event_details = f" Event: {event['date']} at {event['location_name']}." if event else ""
+            event_details = f" Event: {event['date']} at {event_venue(event)}." if event else ""
             sms_response = send_sms(f"Hi {name}, you're invited! Your check-in code is: {code}.{event_details}", [phone])
             results.append({'status': 'sent', 'name': name, 'phone': phone, 'code': code, 'sms_response': sms_response})
         except Exception as error:
@@ -359,19 +496,32 @@ def test_sms():
 @feedback_bp.route('/reminders', methods=['POST'])
 def send_reminders():
     """
-    Send a reminder SMS (with current weather forecast) to all registered guests.
+    Send event details and optional weather to all registered guests.
     """
+    if guests_collection is None:
+        return jsonify({"error": "MongoDB is not configured."}), 503
+    event = get_event_config()
+    if not event:
+        return jsonify({"error": "Save your event details before sending reminders."}), 400
+    if not sms_is_configured():
+        return jsonify({"error": "Configure SMS before sending reminders."}), 503
     all_guests = list(guests_collection.find({}, {"_id": 0}))
 
     if not all_guests:
         return jsonify({"message": "No guests to remind."}), 200
 
     weather = get_weather_blurb()
+
     results = []
 
     for guest in all_guests:
         code = guest['code']
-        message = f"Reminder: don't forget the event! Your check-in code is {code}."
+        message = (
+            f"Reminder: {event.get('event_name') or 'Bagga event'} on {event['date']} "
+            f"at {event_venue(event)}. Your check-in code is {code}."
+        )
+        if event.get('schedule'):
+            message += f" Schedule: {event['schedule']}"
         if weather:
             message += f" {weather}"
         try:
@@ -380,7 +530,73 @@ def send_reminders():
         except Exception as e:
             results.append({"guest": guest['name'], "status": "failed", "error": str(e)})
 
-    return jsonify({"message": "Reminders processed.", "results": results}), 200
+    sent_count = sum(result["status"] == "sent" for result in results)
+    failed_count = len(results) - sent_count
+    return jsonify({
+        "message": "Event reminders processed.",
+        "forecast": weather,
+        "sent_count": sent_count,
+        "failed_count": failed_count,
+        "results": results
+    }), 200
+
+
+@feedback_bp.route('/announcements', methods=['POST'])
+def send_announcement():
+    """Broadcast a schedule or urgent SMS update to attendees and/or event teams."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "A JSON request body is required."}), 400
+
+    message = str(data.get('message', '')).strip()
+    audience = data.get('audience', 'attendees')
+    announcement_type = data.get('type', 'schedule')
+    if not message:
+        return jsonify({"error": "Enter an announcement message."}), 400
+    if len(message) > 500:
+        return jsonify({"error": "Announcements must be 500 characters or fewer."}), 400
+    if announcement_type not in {'reminder', 'schedule', 'urgent'}:
+        return jsonify({"error": "Choose a reminder, schedule update or urgent announcement."}), 400
+    if audience not in {'attendees', 'speakers', 'team', 'everyone'}:
+        return jsonify({"error": "Choose attendees, speakers, team, or everyone."}), 400
+    if not sms_is_configured():
+        return jsonify({"error": "SMS is not configured. Set AT_USERNAME and AT_API_KEY."}), 503
+
+    recipients = []
+    if audience in {'attendees', 'everyone'}:
+        if guests_collection is None:
+            return jsonify({"error": "MongoDB is not configured to load attendees."}), 503
+        recipients.extend(
+            person['phone'] for person in guests_collection.find({}, {"phone": 1, "_id": 0})
+            if person.get('phone')
+        )
+    if audience in {'speakers', 'team', 'everyone'}:
+        if ushers_collection is None:
+            return jsonify({"error": "MongoDB is not configured to load event teams."}), 503
+        contacts = list(ushers_collection.find({}, {"_id": 0}))
+        if audience == 'speakers':
+            contacts = [contact for contact in contacts if contact.get('kind') == 'speaker']
+        elif audience == 'team':
+            contacts = [contact for contact in contacts if contact.get('kind', 'team') != 'speaker']
+        recipients.extend(contact['phone'] for contact in contacts if contact.get('phone'))
+    recipients = list(dict.fromkeys(recipients))
+
+    if not recipients:
+        return jsonify({"error": "There are no phone numbers for the selected audience."}), 404
+
+    prefix = {"reminder": "EVENT REMINDER", "urgent": "URGENT EVENT ALERT", "schedule": "SCHEDULE UPDATE"}[announcement_type]
+    message = f"[{prefix}] {message}"
+
+    try:
+        result = send_sms(message, recipients)
+    except Exception as error:
+        return jsonify({"error": f"SMS broadcast failed: {error}"}), 502
+
+    return jsonify({
+        "message": f"Message accepted for {len(recipients)} recipient(s)." ,
+        "recipient_count": len(recipients),
+        "result": result
+    }), 200
 
 
 @feedback_bp.route('/ushers', methods=['POST'])
@@ -393,14 +609,25 @@ def register_usher():
     if not data or 'name' not in data or 'phone' not in data or 'post' not in data:
         return jsonify({"error": "Missing 'name', 'phone', or 'post' in request"}), 400
 
-    name = data['name']
-    phone = data['phone']
-    post = data['post']
+    if ushers_collection is None:
+        return jsonify({"error": "MongoDB is not configured. Set MONGO_URI to register event teams."}), 503
+    if not sms_is_configured():
+        return jsonify({"error": "SMS is not configured. Set AT_USERNAME and AT_API_KEY."}), 503
+
+    name = str(data['name']).strip()
+    phone = str(data['phone']).strip()
+    post = str(data['post']).strip()
+    kind = data.get('kind', 'team')
+    if not name or not phone or not post:
+        return jsonify({"error": "Enter a name, phone number, and role or session."}), 400
+    if kind not in {'speaker', 'team'}:
+        return jsonify({"error": "Choose speaker or event team."}), 400
 
     usher = {
         "name": name,
         "phone": phone,
         "post": post,
+        "kind": kind,
         "status": "assigned"
     }
     ushers_collection.insert_one(usher)
@@ -602,6 +829,34 @@ def checkin():
     }), 200
 
 
+@feedback_bp.route('/api/sms', methods=['POST'])
+def sms_feedback_callback():
+    """Accept inbound SMS feedback from Africa's Talking."""
+    data = request.get_json(silent=True) or {}
+    phone_number = request.values.get("from") or data.get("from") or data.get("phoneNumber", "")
+    raw_text = (request.values.get("text") or data.get("text", "")).strip()
+    if not phone_number or not raw_text:
+        return "Sender phone and feedback text are required.", 400, {'Content-Type': 'text/plain'}
+
+    anon_id = f"Attendee#{hashlib.md5(phone_number.encode()).hexdigest()[:6].upper()}"
+    ai_result = analyze_feedback(raw_text)
+    try:
+        saved_id = save_feedback(
+            anon_id=anon_id,
+            channel="SMS",
+            raw_text=raw_text,
+            category=ai_result.get("category", "GENERAL"),
+            urgency=ai_result.get("urgency", "MEDIUM")
+        )
+    except Exception:
+        saved_id = None
+
+    if saved_id is None:
+        return "Feedback could not be saved. Please try again later.", 503, {'Content-Type': 'text/plain'}
+
+    return "Thank you. Your feedback was received anonymously.", 200, {'Content-Type': 'text/plain'}
+
+
 @feedback_bp.route('/api/ussd', methods=['POST'])
 def ussd_callback():
     session_id = request.values.get("sessionId", "")
@@ -617,7 +872,22 @@ def ussd_callback():
         response += "2. Report Venue/AC Issue\n"
         response += "3. Send Praise / Shout-out\n"
         response += "4. Custom Feedback Note\n"
-        response += "5. 🎙️ Record Voice Note Instead"
+        response += "5. Voice feedback hotline\n"
+        response += "6. Event information and schedule"
+        return response, 200, {'Content-Type': 'text/plain'}
+
+    if text == "6":
+        config = get_event_config()
+        if not config:
+            return "END Event information is not available yet.", 200, {'Content-Type': 'text/plain'}
+
+        event_name = config.get("event_name", "Bagga event")
+        event_date = config.get("date", "Date to be announced")
+        location = event_venue(config) or "Venue to be announced"
+        response = f"END {event_name}\n{event_date} | {location}"
+        schedule = config.get("schedule", "").strip()
+        if schedule:
+            response += f"\nSchedule: {schedule[:90]}"
         return response, 200, {'Content-Type': 'text/plain'}
 
     if text == "5":
@@ -728,6 +998,20 @@ def send_airtime_reward():
         return jsonify({"status": "success", "response": res})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+
+
+@feedback_bp.route('/communications/status', methods=['GET'])
+def communications_status():
+    """Report whether SMS/USSD channels are configured, for the home page dashboard."""
+    return jsonify({
+        "sms_configured": bool(username and api_key),
+        "sms_environment": "sandbox" if username == "sandbox" else "live",
+        "sms_feedback_number": os.getenv("AT_SMS_FEEDBACK_NUMBER") or None,
+        "ussd_code": os.getenv("AT_USSD_CODE") or None,
+        "storage_configured": bool(mongo_uri),
+    }), 200
 
 
 # NOTE: This module is mounted by the main app; it intentionally does not start a separate server here.

@@ -19,7 +19,7 @@ Bagga Whisper enables conference and event organizers to collect real-time feedb
 ## 🛠️ Tech Stack
 
 * **Backend:** Python 3, Flask
-* **Database:** SQLite3
+* **Database:** MongoDB
 * **Telephony Gateway:** Africa's Talking SDK (USSD, Voice, Airtime)
 * **AI Intelligence:** Google Gemini API (`google-generativeai`)
 * **Frontend:** HTML5, Bootstrap 5, Modern JavaScript
@@ -38,12 +38,17 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment Variables
-Create a `.env` file in the root directory:
+Create `backend/.env` (loaded automatically from any working directory):
 ```env
 AT_USERNAME=sandbox
 AT_API_KEY=your_africas_talking_api_key
 GEMINI_API_KEY=your_google_gemini_api_key
+MONGO_URI=your_mongodb_connection_string
+AT_SMS_FEEDBACK_NUMBER=your_inbound_sms_number
+AT_USSD_CODE=*384*your_service_code#
 ```
+
+Configure Africa's Talking to send incoming SMS to `https://your-public-host/api/sms` and USSD sessions to `https://your-public-host/api/ussd`. The public host must be reachable by Africa's Talking. USSD option 6 returns the saved event details and schedule; incoming SMS feedback is anonymized and appears in the feedback dashboard.
 
 ### 3. Run Application
 ```bash
