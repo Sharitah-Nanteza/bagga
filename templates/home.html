@@ -805,6 +805,8 @@
 </head>
 
 <body>
+{% if database_error %}<div role="alert" style="padding:16px;background:#fff3cd;color:#664d03">{{ database_error }}</div>{% endif %}
+
     <div class="shell">
         <header class="topbar">
             <div class="brand">
@@ -814,7 +816,7 @@
             <nav class="nav" aria-label="Main navigation">
                 <a href="{{ url_for('home') }}" aria-current="page">Home</a>
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a href="{{ url_for('register') }}" class="secondary-btn">Register</a>
+                <a href="#weather-tool" class="secondary-btn">Remind attendees</a>
                 <a href="{{ url_for('attendee') }}" class="primary-btn">Submit feedback</a>
             </nav>
         </header>
@@ -830,7 +832,7 @@
 
                 <div class="actions">
                     <a class="cta" href="{{ url_for('attendee') }}">Submit feedback</a>
-                    <a class="secondary-btn" href="{{ url_for('register') }}">Join Bagga</a>
+                    <a class="secondary-btn" href="#weather-tool">Remind attendees</a>
                     <a class="secondary-btn" href="{{ url_for('dashboard') }}">View reports</a>
                 </div>
 
@@ -946,7 +948,10 @@
                             <label for="event-name">Event name
                                 <input id="event-name" name="event_name" placeholder="Bagga Summit" required>
                             </label>
-                            <label for="event-location">Event location
+                            <label for="event-venue">Event venue
+                                <input id="event-venue" name="venue" maxlength="200" placeholder="Sheraton Kampala, Victoria Ballroom" required>
+                            </label>
+                            <label for="event-location">City or town (Uganda, for weather)
                                 <input id="event-location" name="location" autocomplete="address-level2"
                                     placeholder="Kampala, Uganda" required>
                             </label>
@@ -963,14 +968,16 @@
                     </article>
 
                     <article class="communication-tool">
-                        <details>
+                        <details id="customer-updates-panel">
                             <summary>
-                                <h3>Schedule or urgent announcement</h3>
+                                <h3>Customer reminders and updates</h3>
                             </summary>
-                            <p class="tool-description">Send an update to attendees, event teams, or both.</p>
+                            <p class="tool-description">Write a custom reminder or update and send it to registered attendees, event teams, or both. Messages send when you click the button.</p>
+                            <span id="customer-updates"></span>
                             <form id="announcement-form" class="control-form">
-                                <label for="announcement-type">Announcement type
+                                <label for="announcement-type">Message type
                                     <select id="announcement-type" name="type">
+                                        <option value="reminder">Reminder</option>
                                         <option value="schedule">Schedule update</option>
                                         <option value="urgent">Urgent announcement</option>
                                     </select>
@@ -985,9 +992,9 @@
                                 </label>
                                 <label for="announcement-message">Message
                                     <textarea id="announcement-message" name="message" maxlength="500"
-                                        placeholder="Share the change or urgent update" required></textarea>
+                                        placeholder="Reminder: please arrive at Sheraton Kampala by 9:00 AM EAT." required></textarea>
                                 </label>
-                                <button type="submit">Send announcement</button>
+                                <button type="submit">Send message</button>
                                 <p id="announcement-status" class="status-line" aria-live="polite"></p>
                             </form>
                         </details>
@@ -1001,6 +1008,9 @@
                                 <h3>Invite an attendee</h3>
                             </summary>
                             <p class="tool-description">Register an attendee and send a check-in code by SMS.</p>
+                            <p id="sandbox-invite-help" class="tool-description" hidden>Sandbox invitations appear in the
+                                <a href="https://simulator.africastalking.com:1517/" target="_blank" rel="noopener noreferrer">Africa’s Talking simulator</a>.
+                                Open it first and use the same phone number below.</p>
                             <form id="guest-form" class="control-form">
                                 <label for="guest-name">Attendee name
                                     <input id="guest-name" name="name" autocomplete="name" required>
@@ -1069,15 +1079,13 @@
                     </article>
 
                     <article id="weather-tool" class="communication-tool weather-tool">
-                        <h3>Weather forecast reminder</h3>
-                        <p class="tool-description">The forecast is included when you send the reminder. Use the target
-                            date below to send it one day before the event.</p>
+                        <h3>Remind attendees</h3>
+                        <p class="tool-description">Send all registered attendees the event name, date, location, schedule and their check-in code. Weather is included when available. Click below to send now; reminders are not automatic.</p>
                         <p id="weather-forecast" class="weather-forecast" aria-live="polite">Set an event location and
                             date to load its forecast.</p>
                         <p class="reminder-date">Recommended send date, one day before: <output id="reminder-date">Not
                                 set</output></p>
-                        <button id="send-reminders" class="tool-button" type="button" disabled>Send weather-aware
-                            reminder</button>
+                        <button id="send-reminders" class="tool-button" type="button">Send event reminders</button>
                         <p id="reminder-status" class="status-line" aria-live="polite"></p>
                     </article>
                 </div>
@@ -1085,6 +1093,15 @@
         </section>
     </div>
     <script>
+        function openCustomerUpdates() {
+            if (window.location.hash === '#customer-updates') {
+                document.getElementById('customer-updates-panel').open = true;
+                document.getElementById('customer-updates-panel').scrollIntoView();
+            }
+        }
+        window.addEventListener('hashchange', openCustomerUpdates);
+        window.addEventListener('DOMContentLoaded', openCustomerUpdates);
+
         const eventForm = document.querySelector('#event-form');
         const eventDateInput = document.querySelector('#event-date');
         const eventStatus = document.querySelector('#event-status');
@@ -1102,7 +1119,6 @@
         const localToday = new Date();
         localToday.setMinutes(localToday.getMinutes() - localToday.getTimezoneOffset());
         eventDateInput.min = localToday.toISOString().slice(0, 10);
-        let forecastAvailable = false;
 
         function setStatus(element, message, state = '') {
             element.textContent = message;
@@ -1119,15 +1135,11 @@
         }
 
         async function refreshWeather() {
-            reminderButton.disabled = true;
             reminderDate.textContent = 'Not set';
-            forecastAvailable = false;
             try {
                 const data = await requestJson('/weather');
                 weatherForecast.textContent = data.forecast;
                 reminderDate.textContent = data.reminder_date;
-                forecastAvailable = true;
-                reminderButton.disabled = false;
             } catch (error) {
                 weatherForecast.textContent = error.message;
             }
@@ -1145,13 +1157,14 @@
                     body: JSON.stringify({
                         event_name: eventForm.elements.event_name.value,
                         location: eventForm.elements.location.value,
+                        venue: eventForm.elements.venue.value,
                         date: eventForm.elements.date.value,
                         schedule: eventForm.elements.schedule.value
                     })
                 });
                 eventMetric.textContent = 'Configured';
                 const notification = data.speaker_notifications;
-                let saveMessage = `Event saved for ${data.location_name} on ${data.date}.`;
+                let saveMessage = `Event saved for ${[data.venue, data.location_name].filter(Boolean).join(', ')} on ${data.date}.`;
                 let saveState = 'success';
                 if (notification?.status === 'sent') {
                     saveMessage += ` ${notification.sent_count} speaker(s) notified.`;
@@ -1177,6 +1190,7 @@
                 const data = await requestJson('/event');
                 eventForm.elements.event_name.value = data.event_name || '';
                 eventForm.elements.location.value = data.location_name;
+                eventForm.elements.venue.value = data.venue || '';
                 eventForm.elements.date.value = data.date;
                 eventForm.elements.schedule.value = data.schedule || '';
                 eventMetric.textContent = 'Configured';
@@ -1192,7 +1206,8 @@
         async function loadCommunicationsStatus() {
             try {
                 const data = await requestJson('/communications/status');
-                smsMetric.textContent = data.sms_configured ? 'Configured' : 'Setup needed';
+                smsMetric.textContent = data.sms_configured ? (data.sms_environment === 'sandbox' ? 'Sandbox' : 'Configured') : 'Setup needed';
+                document.querySelector('#sandbox-invite-help').hidden = data.sms_environment !== 'sandbox';
                 smsFeedbackNumber.textContent = data.sms_feedback_number || 'Set AT_SMS_FEEDBACK_NUMBER';
                 ussdServiceCode.textContent = data.ussd_code || 'Set AT_USSD_CODE';
                 smsCallbackUrl.textContent = `${window.location.origin}/api/sms`;
@@ -1274,7 +1289,7 @@
             } catch (error) {
                 setStatus(document.querySelector('#reminder-status'), error.message, 'error');
             } finally {
-                reminderButton.disabled = !forecastAvailable;
+                reminderButton.disabled = false;
             }
         });
 

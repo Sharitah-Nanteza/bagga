@@ -19,7 +19,7 @@ Bagga Whisper enables conference and event organizers to collect real-time feedb
 ## 🛠️ Tech Stack
 
 * **Backend:** Python 3, Flask
-* **Database:** SQLite3
+* **Database:** MongoDB
 * **Telephony Gateway:** Africa's Talking SDK (USSD, Voice, Airtime)
 * **AI Intelligence:** Google Gemini API (`google-generativeai`)
 * **Frontend:** HTML5, Bootstrap 5, Modern JavaScript
@@ -38,7 +38,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment Variables
-Create a `.env` file in the root directory:
+Create `backend/.env` (loaded automatically from any working directory):
 ```env
 AT_USERNAME=sandbox
 AT_API_KEY=your_africas_talking_api_key

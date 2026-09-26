@@ -1,57 +1,67 @@
-import os
-
 from dotenv import load_dotenv
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template
+from pymongo.errors import PyMongoError
 
-from backend.routes import feedback_bp
-from database import get_all_feedback, init_db
+from database import get_all_feedback, init_db, mongo_client
+from backend.routes import feedback_bp, guests_collection
 
 load_dotenv()
-init_db()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "bagga-development-key")
 app.register_blueprint(feedback_bp)
+
+try:
+    init_db()
+except PyMongoError:
+    app.logger.warning("MongoDB unavailable; check Atlas network access and backend/.env.")
+
+
+@app.errorhandler(PyMongoError)
+def database_error(error):
+    return jsonify({"error": "MongoDB is unavailable. Check Atlas network access and backend/.env."}), 503
+
+
+@app.route("/health")
+def health():
+    if mongo_client is None:
+        return jsonify({"status": "degraded", "database": "not configured"}), 503
+    try:
+        mongo_client.admin.command("ping")
+    except PyMongoError:
+        return jsonify({"status": "degraded", "database": "unavailable"}), 503
+    return jsonify({"status": "ok", "database": "connected"})
+
+
+def render_feedback_page(template):
+    try:
+        feedbacks = get_all_feedback()
+        error = None if mongo_client is not None else "Database is not configured. Set MONGO_URI in backend/.env."
+    except PyMongoError:
+        feedbacks = []
+        error = "Database is unavailable. Saved feedback cannot be loaded and changes cannot be saved. Check MongoDB Atlas network access."
+    attendees = []
+    if template == "dashboard.html" and guests_collection is not None:
+        try:
+            attendees = list(guests_collection.find({}, {"_id": 0, "name": 1, "phone": 1}))
+        except PyMongoError:
+            error = "Database is unavailable. Feedback or registered contacts could not be loaded."
+    stats = {"total_feedback": len(feedbacks), "high_urgency": sum(item.get("urgency") == "HIGH" for item in feedbacks)}
+    return render_template(template, feedbacks=feedbacks, database_error=error, attendees=attendees, stats=stats)
+
 
 # --- 1. HOME / LANDING PAGE ROUTE ---
 @app.route("/")
 def home():
-    feedbacks = get_all_feedback()
-    return render_template("home.html", feedbacks=feedbacks)
+    return render_feedback_page("home.html")
 
 # --- 2. FEEDBACK DASHBOARD ROUTE ---
 @app.route("/dashboard")
 def dashboard():
-    feedbacks = get_all_feedback()
-    return render_template("dashboard.html", feedbacks=feedbacks)
+    return render_feedback_page("dashboard.html")
 
 @app.route("/attendee")
 def attendee():
     return render_template("attendee.html")
-
-@app.route("/register")
-def register():
-    return render_template("register.html")
-
-@app.route("/login")
-def login():
-    return render_template("login.html")
-
-@app.route("/marketplace")
-def marketplace():
-    return render_template("marketplace.html")
-
-@app.route("/organiser/<organiser_id>")
-def organiser_profile(organiser_id):
-    return render_template("organiser_profile.html", organiser_id=organiser_id)
-
-@app.route("/organiser-dashboard")
-def organiser_dashboard():
-    return render_template("organiser_dashboard.html")
-
-@app.route("/client-dashboard")
-def client_dashboard():
-    return render_template("client_dashboard.html")
 
 @app.route("/feedback")
 def feedback():

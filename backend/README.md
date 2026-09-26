@@ -17,8 +17,7 @@ Flask backend for event setup, guest registration, check-in, usher coordination,
    ```bash
    python3 -m venv .venv
    .venv/bin/pip install -r requirements.txt
-  cd ..
-  .venv/bin/python app.py
+   .venv/bin/python ../app.py
    ```
 
 The API runs at `http://127.0.0.1:5000`.
@@ -98,7 +97,7 @@ Returns all registered guests, including their check-in state and code.
 
 #### `POST /reminders`
 
-Sends a weather-aware reminder SMS to every registered guest. Returns per-recipient results, counts, and the forecast. If no forecast is available, returns `502` without sending.
+Sends a weather-aware reminder SMS to every registered guest. Returns per-recipient results, counts, and the forecast. Includes weather when available; reminders still send if the weather service is unavailable. Use **Remind attendees** on the home page to send manually.
 
 ### Ushers
 
@@ -201,3 +200,35 @@ Returns `200` on success, `404` when the code is not found, and `409` when the g
 - MongoDB stores event configuration, guests, ushers, tasks, and contributions.
 - Africa's Talking sends invite, reminder, usher, task, and contribution receipt SMS messages.
 - Open-Meteo geocoding and forecast APIs provide location and weather data without an API key.
+## Database troubleshooting
+
+Configuration is loaded from `backend/.env` regardless of the working directory. Exported environment variables take precedence. All records use the `event_command_center` MongoDB database.
+
+Visit `/health` to check the live database connection. If it returns 503, verify that the Atlas cluster is active, your current IP is in its Network Access list, and the database user credentials in `MONGO_URI` are correct. The interface remains available during an outage and displays a warning; failed writes are not reported as successful.
+
+## Invitation SMS with Africa's Talking sandbox
+
+The existing `POST /guests` invitation flow uses the sandbox when `backend/.env` has:
+
+```env
+AT_USERNAME=sandbox
+AT_API_KEY=your_sandbox_api_key
+AT_SMS_SIMULATOR=false
+```
+
+`AT_SMS_SIMULATOR` is the app's local fake-response fallback; it is not Africa's Talking's sandbox. Keep it false when testing provider integration. Restart Flask after changing environment variables.
+
+1. Open https://account.africastalking.com/apps/sandbox and launch its simulator.
+2. Sign into the simulator with a test phone number including the country code and keep it open.
+3. In the app, open **Invite an attendee** and register that same number.
+4. Read the invitation and check-in code in the simulator's SMS inbox. Sandbox messages do not arrive on a physical handset.
+
+The app checks recipient acceptance before reporting success. Acceptance is not a delivery receipt. A failed SMS leaves the guest saved with `sms_status: failed`.
+
+## Feedback interface
+
+`/dashboard` and `/feedback` use the supplied blue/indigo control-center design. Counts come from MongoDB feedback; the contact directory lists registered guests separately from anonymous feedback. The language selector and show-more control come from the supplied HTML. Home links open the existing reminder and customer-update tools. The supplied SQLite database, permanent-delete action, and placeholder SMS handlers were not installed.
+
+`/attendee` uses the matching palette and submits typed feedback to the existing API. Save errors retain the entered note. The old mock audio control was removed because it submitted a fixed sample complaint rather than the recording.
+
+Run interface regression checks from the project directory with `python -m unittest discover -s tests -v`. These checks mock database access and do not send messages.
