@@ -4,6 +4,7 @@ import os
 import random
 import secrets
 import string
+from pathlib import Path
 
 import africastalking
 import requests
@@ -15,12 +16,13 @@ from werkzeug.security import generate_password_hash
 from ai_engine import analyze_feedback
 from database import get_all_feedback, save_feedback
 
-# Load environment variables
-load_dotenv()
+# Load the backend configuration even when Flask is started from the project root.
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 username = os.getenv("AT_USERNAME")
 api_key = os.getenv("AT_API_KEY")
 mongo_uri = os.getenv("MONGO_URI")
+sms_simulator = os.getenv("AT_SMS_SIMULATOR", "true").lower() in {"1", "true", "yes", "on"}
 
 # Initialize Africa's Talking
 if username and api_key:
@@ -58,6 +60,33 @@ PAYMENTS_SANDBOX_URL = "https://payments.sandbox.africastalking.com/mobile/check
 feedback_bp = Blueprint("feedback_bp", __name__)
 
 EVENT_TYPES = ["wedding", "corporate", "concert", "religious", "community", "conference", "other"]
+
+
+def send_sms(message, phone_numbers):
+    """Send SMS through the single configured Africa's Talking client."""
+    if not username or not api_key:
+        if sms_simulator:
+            return {
+                "status": "simulated",
+                "recipients": [str(phone).strip() for phone in phone_numbers],
+                "message": message,
+                "notice": "SMS simulator enabled. Add AT_USERNAME and AT_API_KEY for live delivery.",
+            }
+        raise RuntimeError("Africa's Talking SMS is not configured. Set AT_USERNAME and AT_API_KEY in .env, then restart Flask.")
+    if not phone_numbers or any(not str(phone).strip() for phone in phone_numbers):
+        raise ValueError("At least one valid phone number is required.")
+    return sms.send(message, [str(phone).strip() for phone in phone_numbers])
+
+
+def parse_event_date(value):
+    """Validate the dashboard's HTML date value and return ISO text."""
+    try:
+        event_date = datetime.date.fromisoformat(str(value).strip())
+    except (TypeError, ValueError):
+        raise ValueError("Date must use YYYY-MM-DD format.")
+    if event_date < datetime.date.today():
+        raise ValueError("Event date cannot be in the past.")
+    return event_date.isoformat()
 
 
 def _public_user(user):
@@ -213,8 +242,13 @@ def set_event():
     if not data or 'location' not in data or 'date' not in data:
         return jsonify({"error": "Missing 'location' or 'date' in request"}), 400
 
-    location_name_input = data['location']
-    date = data['date']
+    location_name_input = str(data['location']).strip()
+    if not location_name_input:
+        return _error('Location is required.')
+    try:
+        date = parse_event_date(data['date'])
+    except ValueError as error:
+        return _error(str(error))
 
     lat, lon, resolved_name = geocode_location(location_name_input)
 
@@ -289,14 +323,16 @@ def register_guest():
     }
     guests_collection.insert_one(guest)
 
-    message = f"Hi {name}, you're invited! Your check-in code is: {code}"
+    event = get_event_config()
+    event_details = f" Event: {event['date']} at {event['location_name']}." if event else ""
+    message = f"Hi {name}, you're invited! Your check-in code is: {code}.{event_details}"
 
     weather = get_weather_blurb()
     if weather:
         message += f". {weather}"
 
     try:
-        sms_response = sms.send(message, [phone])
+        sms_response = send_sms(message, [phone])
     except Exception as e:
         return jsonify({"error": f"Guest saved but SMS failed: {str(e)}"}), 500
 
@@ -354,7 +390,9 @@ def upload_guests():
         }
         guests_collection.insert_one(guest)
         try:
-            sms_response = sms.send(f"Hi {name}, you're invited! Your check-in code is: {code}", [phone])
+            event = get_event_config()
+            event_details = f" Event: {event['date']} at {event['location_name']}." if event else ""
+            sms_response = send_sms(f"Hi {name}, you're invited! Your check-in code is: {code}.{event_details}", [phone])
             results.append({'status': 'sent', 'name': name, 'phone': phone, 'code': code, 'sms_response': sms_response})
         except Exception as error:
             results.append({'status': 'saved_sms_failed', 'name': name, 'phone': phone, 'code': code, 'error': str(error)})
@@ -388,6 +426,21 @@ def feedback_feed():
     return jsonify({'feedback': get_all_feedback()[:10]}), 200
 
 
+@feedback_bp.route('/api/sms/test', methods=['POST'])
+def test_sms():
+    """Send a test message through the configured SMS path."""
+    data = request.get_json(silent=True) or {}
+    phone = str(data.get('phone', '')).strip()
+    message = str(data.get('message', '')).strip()
+    if not phone or not message:
+        return _error('Phone number and message are required.')
+    try:
+        delivery = send_sms(message, [phone])
+        return jsonify({'status': 'success', 'delivery': delivery}), 200
+    except Exception as error:
+        return jsonify({'status': 'error', 'message': str(error)}), 502
+
+
 @feedback_bp.route('/reminders', methods=['POST'])
 def send_reminders():
     """
@@ -410,7 +463,7 @@ def send_reminders():
         if weather:
             message += f" {weather}"
         try:
-            sms_response = sms.send(message, [guest['phone']])
+            sms_response = send_sms(message, [guest['phone']])
             results.append({"guest": guest['name'], "status": "sent", "response": sms_response})
         except Exception as e:
             results.append({"guest": guest['name'], "status": "failed", "error": str(e)})
@@ -447,7 +500,7 @@ def register_usher():
 
     message = f"Hi {name}, you're assigned to: {post} for the event. See you there!"
     try:
-        sms_response = sms.send(message, [phone])
+        sms_response = send_sms(message, [phone])
     except Exception as e:
         return jsonify({"error": f"Usher saved but SMS failed: {str(e)}"}), 500
 
@@ -507,7 +560,7 @@ def assign_task():
 
     message = f"Task assigned: {title} (due: {due_time}). Task code: {task_code}"
     try:
-        sms_response = sms.send(message, [usher_phone])
+        sms_response = send_sms(message, [usher_phone])
     except Exception as e:
         return jsonify({"error": f"Task saved but SMS failed: {str(e)}"}), 500
 
@@ -591,7 +644,7 @@ def make_contribution():
 
     receipt = f"Hi {name}, your contribution of {amount} {currency} has been recorded. Thank you!"
     try:
-        sms_response = sms.send(receipt, [phone])
+        sms_response = send_sms(receipt, [phone])
     except Exception as e:
         return jsonify({
             "message": "Contribution recorded, but SMS receipt failed.",
@@ -961,7 +1014,7 @@ def create_booking():
     bookings_collection.insert_one(booking)
     sms_message = f"New Bagga invitation from {user['name']} for {booking['event_date']} in {booking['location']}. Review it in your dashboard."
     try:
-        sms_result = sms.send(sms_message, [organiser['phone']])
+        sms_result = send_sms(sms_message, [organiser['phone']])
         notification = 'sent'
     except Exception as error:
         sms_result = str(error)

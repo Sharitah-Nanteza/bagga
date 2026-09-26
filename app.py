@@ -37,21 +37,13 @@ def register():
 def login():
     return render_template("login.html")
 
-@app.route("/marketplace")
-def marketplace():
-    return render_template("marketplace.html")
-
-@app.route("/organiser/<organiser_id>")
-def organiser_profile(organiser_id):
-    return render_template("organiser_profile.html", organiser_id=organiser_id)
-
 @app.route("/organiser-dashboard")
 def organiser_dashboard():
     return render_template("organiser_dashboard.html")
 
-@app.route("/client-dashboard")
-def client_dashboard():
-    return render_template("client_dashboard.html")
+@app.route("/sms-simulator")
+def sms_simulator():
+    return render_template("sms_simulator.html")
 
 @app.route("/feedback")
 def feedback():

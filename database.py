@@ -1,10 +1,11 @@
 import os
+from pathlib import Path
 from datetime import datetime
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / "backend" / ".env")
 
 MONGO_URI = os.getenv("MONGO_URI") or os.getenv("MONGODB_URI")
 
