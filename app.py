@@ -48,17 +48,17 @@ USSD_TEXTS = {
     'en': {
         'select_category': "CON Select category:\n1. Praise\n2. Sound/Audio\n3. Facilities\n4. General Note",
         'type_message': "CON Type your message or feedback:",
-        'thank_you': "END Thank you for your feedback! Bagga Whisper has recorded your note."
+        'thank_you': "END Thank you for your feedback! Bagga has recorded your note."
     },
     'lg': {
         'select_category': "CON Londa kategoria:\n1. Okusiima\n2. Edoboozi/Sound\n3. Eby'omukutu\n4. Ekirowoozo Eky'abulijjo",
         'type_message': "CON Wandiika ekyomukutu gwo oba ekyrowoozo kyolina:",
-        'thank_you': "END Weebale nnyo okutuwa ekyrowoozo kyo! Bagga Whisper ekikutte."
+        'thank_you': "END Weebale nnyo okutuwa ekyrowoozo kyo! Bagga ekikutte."
     },
     'sw': {
         'select_category': "CON Chagua aina:\n1. Sifa\n2. Sauti/Mfumo\n3. Vifaa/Majengo\n4. Wazo la Kawaida",
         'type_message': "CON Andika ujumbe au maoni yako:",
-        'thank_you': "END Asante kwa kutoa maoni yako! Bagga Whisper imerekodi ujumbe wako."
+        'thank_you': "END Asante kwa kutoa maoni yako! Bagga imerekodi ujumbe wako."
     }
 }
 
@@ -69,8 +69,32 @@ CATEGORIES = {
     '4': 'GENERAL'
 }
 
-# Simple keywords to flag high urgency automatically
-URGENT_KEYWORDS = ['ac', 'fan', 'hot', 'heat', 'sound', 'mic', 'loud', 'speaker', 'audio', 'fire', 'help', 'ebugumu', 'edoboozi']
+# Comprehensive list of urgent keywords (English, Luganda, Kiswahili)
+URGENT_KEYWORDS = [
+    # English - Sound & Audio
+    'mic', 'microphone', 'sound', 'audio', 'speaker', 'loud', 'silent', 'volume', 'hear', 'echo', 'noise',
+    # English - Facilities / Temperature / Emergency
+    'ac', 'aircon', 'fan', 'hot', 'heat', 'warm', 'stuffy', 'fire', 'help', 'emergency', 'broken', 'bad', 'dark', 'light', 'power',
+    # Luganda
+    'edoboozi', 'sikyawulira', 'ebugumu', 'omuliro', 'akazindaalo', 'obuzibu', 'ebikwata',
+    # Kiswahili
+    'sauti', 'joto', 'mbovu', 'msaidie', 'moto', 'kipaza', 'haisikiki', 'fani'
+]
+
+def check_urgency(text):
+    """Checks input string for high-urgency keywords across supported languages."""
+    if not text:
+        return 'NORMAL'
+    
+    cleaned = text.lower()
+    # Strip common punctuation for accurate token evaluation
+    words = [w.strip(".,!?:;\"'()[]{}") for w in cleaned.split()]
+    
+    for kw in URGENT_KEYWORDS:
+        if kw in words or kw in cleaned:
+            return 'HIGH'
+            
+    return 'NORMAL'
 
 # ==========================================
 # ATTENDEE USSD ROUTE (HANDLES BOTH ENDPOINTS)
@@ -86,7 +110,7 @@ def ussd_callback():
 
     # LEVEL 0: Initial Dial -> Ask for Language
     if text == "":
-        response = "CON Welcome to Bagga Whisper!\nChoose Language / Londa Lulimi:\n1. English\n2. Luganda\n3. Swahili"
+        response = "CON Welcome to Bagga!\nChoose Language / Londa Lulimi:\n1. English\n2. Luganda\n3. Swahili"
         return Response(response, mimetype='text/plain')
 
     # Map language choice
@@ -113,7 +137,7 @@ def ussd_callback():
         raw_text = user_inputs[2]
 
         # Determine Urgency
-        urgency = 'HIGH' if any(word in raw_text.lower() for word in URGENT_KEYWORDS) else 'NORMAL'
+        urgency = check_urgency(raw_text)
         anon_id = f"Attendee#{phone_number[-4:]}" if len(phone_number) >= 4 else "Attendee#0000"
 
         # Database Insertion
@@ -146,12 +170,17 @@ def ussd_callback():
 # ORGANIZER DASHBOARD ROUTES
 # ==========================================
 @app.route('/', methods=['GET'])
+@app.route('/dashboard', methods=['GET'])
 def dashboard():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # Fetch all feedback entries
+    # Total submissions count across all time
+    cursor.execute('SELECT COUNT(*) FROM feedback')
+    total_feedback_count = cursor.fetchone()[0]
+
+    # Fetch ALL feedback entries sorted newest first
     cursor.execute('SELECT * FROM feedback ORDER BY id DESC')
     feedbacks = [dict(row) for row in cursor.fetchall()]
 
@@ -165,18 +194,28 @@ def dashboard():
     ''')
     attendees = [dict(row) for row in cursor.fetchall()]
 
-    # Stats summary
+    # High urgency stats
     cursor.execute("SELECT COUNT(*) FROM feedback WHERE urgency = 'HIGH'")
     high_urgency_result = cursor.fetchone()
     high_urgency = high_urgency_result[0] if high_urgency_result else 0
 
     stats = {
-        'total_feedback': len(feedbacks),
+        'total_feedback': total_feedback_count,
         'high_urgency': high_urgency
     }
 
     conn.close()
     return render_template('dashboard.html', feedbacks=feedbacks, attendees=attendees, stats=stats)
+
+
+@app.route('/api/organizer/delete/<int:feedback_id>', methods=['POST'])
+def delete_feedback(feedback_id):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM feedback WHERE id = ?', (feedback_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/api/organizer/reply', methods=['POST'])
