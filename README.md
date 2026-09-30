@@ -1,8 +1,8 @@
-# 🎙️ Bagga Whisper
+#  Bagga 
 
 > **Offline-First, Anonymous Event Attendee Feedback & Real-Time Intelligence Platform**
 
-Bagga Whisper enables conference and event organizers to collect real-time feedback from attendees without requiring an internet connection or smartphone apps. Powered by **Africa's Talking USSD/Voice APIs** and **Google Gemini AI**, it routes complaints, praises, and operational alerts straight to an organizer command dashboard while guaranteeing 100% attendee anonymity through cryptographic phone number hashing.
+Bagga  enables conference and event organizers to collect real-time feedback from attendees without requiring an internet connection or smartphone apps. Powered by **Africa's Talking USSD/Voice APIs** and **Google Gemini AI**, it routes complaints, praises, and operational alerts straight to an organizer command dashboard while guaranteeing 100% attendee anonymity through cryptographic phone number hashing.
 
 ---
 
