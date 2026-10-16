@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bagga Control Center</title>
+    <title>Bagga Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -17,7 +15,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen antialiased selection:bg-blue-600 selection:text-white">
+<body class="bg-slate-100 text-slate-800 min-h-screen antialiased">
 
     <!-- Header Navigation -->
     <header class="border-b border-slate-200 bg-white/90 sticky top-0 backdrop-blur-md z-50 shadow-sm">
@@ -32,27 +30,30 @@
                     <div class="flex items-center gap-2">
                         <h1 class="text-xl font-black tracking-tight text-slate-900">Bagga</h1>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> <span data-i18n="badge_live">LIVE CENTER</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> <span id="lbl_live_engine">LIVE ENGINE</span>
                         </span>
                     </div>
-                    <p class="text-xs text-slate-500 font-medium" data-i18n="subtitle">Two-Way Telecom & Real-time Event Analytics</p>
+                    <p id="lbl_subhead" class="text-xs text-slate-500 font-medium">Real-Time USSD Telemetry & Operations Intelligence</p>
                 </div>
             </div>
 
+            <!-- Header Controls: Language Switcher & Export -->
             <div class="flex items-center gap-3">
-                <!-- Language Selector Dropdown -->
-                <div class="relative inline-flex items-center">
-                    <i class="fa-solid fa-language text-blue-600 absolute left-3 pointer-events-none text-sm"></i>
-                    <select id="langSelect" onchange="changeLanguage(this.value)" class="pl-9 pr-8 py-2 text-xs font-bold text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 shadow-sm cursor-pointer appearance-none">
-                        <option value="en">English (EN)</option>
-                        <option value="lg">Luganda (LG)</option>
-                        <option value="sw">Kiswahili (SW)</option>
+                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <i class="fa-solid fa-globe text-blue-600 text-xs"></i>
+                    <select id="dashLangSelect" onchange="switchDashboardLanguage(this.value)" class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer">
+                        <option value="en">English (US/UK)</option>
+                        <option value="lg">Luganda (UG)</option>
+                        <option value="sw">Kiswahili (KE/TZ)</option>
                     </select>
-                    <i class="fa-solid fa-chevron-down text-slate-400 absolute right-3 pointer-events-none text-[10px]"></i>
                 </div>
 
-                <a href="/" class="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition duration-200 shadow-sm active:scale-95">
-                    <i class="fa-solid fa-arrows-rotate text-blue-600 group-hover:rotate-180 transition-transform duration-500"></i> <span data-i18n="btn_refresh">Refresh Stream</span>
+                <a href="/report/pdf" target="_blank" class="px-3.5 py-2 text-xs font-extrabold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-pdf text-rose-600"></i> <span id="lbl_export_btn">Export Post-Event Report (PDF)</span>
+                </a>
+
+                <a href="/" class="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition duration-200 shadow-sm">
+                    <i class="fa-solid fa-arrows-rotate text-blue-600 group-hover:rotate-180 transition-transform duration-500"></i> <span id="lbl_refresh_btn">Refresh</span>
                 </a>
             </div>
         </div>
@@ -61,130 +62,129 @@
     <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
         
         <!-- Metrics Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             
-            <!-- Card 1: Total Notes -->
-            <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-blue-400 hover:shadow-xl group">
+            <div class="glass-card rounded-2xl border border-slate-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_total">Total Notes Submitted</p>
-                        <h3 class="text-4xl font-black text-slate-900 mt-2 tracking-tight">
-                            {{ stats.total_feedback if stats else (feedbacks|length) }}
-                        </h3>
+                        <p id="lbl_stat_notes" class="text-xs font-bold uppercase tracking-wider text-slate-500">Total USSD Notes</p>
+                        <h3 class="text-3xl font-black text-slate-900 mt-2">{{ stats.total_feedback }}</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-comments text-xl"></i>
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                        <i class="fa-solid fa-comments"></i>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
-                    <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> <span data-i18n="stat_total_sub">Stream active via Africa's Talking USSD</span>
-                </div>
+                <p class="mt-3 text-[11px] text-slate-500 font-semibold"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i> Live via Africa's Talking</p>
             </div>
 
-            <!-- Card 2: High Urgency -->
-            <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-amber-400 hover:shadow-xl group">
+            <div class="glass-card rounded-2xl border border-slate-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_urgency">High Urgency Alerts</p>
-                        <h3 class="text-4xl font-black text-amber-600 mt-2 tracking-tight">
-                            {{ stats.high_urgency if stats else 0 }}
-                        </h3>
+                        <p id="lbl_stat_urgency" class="text-xs font-bold uppercase tracking-wider text-slate-500">High Urgency Alerts</p>
+                        <h3 class="text-3xl font-black text-amber-600 mt-2">{{ stats.high_urgency }}</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 mr-2 animate-ping"></span> <span data-i18n="stat_urgency_sub">Heuristic priority detection</span>
-                </div>
+                <p id="lbl_stat_triage" class="mt-3 text-[11px] text-slate-500 font-semibold"><span class="w-2 h-2 rounded-full bg-amber-500 inline-block mr-1"></span> Automated Triage</p>
             </div>
 
-            <!-- Card 3: Captured Audience -->
-            <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-indigo-400 hover:shadow-xl group">
+            <div class="glass-card rounded-2xl border border-slate-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_audience">Captured Audience</p>
-                        <h3 class="text-4xl font-black text-indigo-600 mt-2 tracking-tight">
-                            {{ attendees|length }}
-                        </h3>
+                        <p id="lbl_stat_health" class="text-xs font-bold uppercase tracking-wider text-slate-500">Venue Health Index</p>
+                        <h3 class="text-3xl font-black text-emerald-600 mt-2">{{ stats.uptime_rate }}%</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-users text-xl"></i>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                        <i class="fa-solid fa-shield-halved"></i>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
-                    <i class="fa-solid fa-mobile-retro text-blue-600 mr-1.5"></i> <span data-i18n="stat_audience_sub">Auto-captured phone directory</span>
+                <p id="lbl_stat_b2b" class="mt-3 text-[11px] text-slate-500 font-semibold"><i class="fa-solid fa-check text-emerald-500 mr-1"></i> B2B Service Level Metric</p>
+            </div>
+
+            <div class="glass-card rounded-2xl border border-slate-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p id="lbl_stat_audience" class="text-xs font-bold uppercase tracking-wider text-slate-500">Captured Audience</p>
+                        <h3 class="text-3xl font-black text-indigo-600 mt-2">{{ attendees|length }}</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
                 </div>
+                <p id="lbl_stat_leads" class="mt-3 text-[11px] text-slate-500 font-semibold"><i class="fa-solid fa-address-book text-indigo-500 mr-1"></i> Auto-saved Phone Leads</p>
             </div>
 
         </div>
 
         <!-- Broadcast SMS Banner -->
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-6 shadow-xl border border-blue-900">
-            <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-6 shadow-xl border border-blue-900">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-paper-plane text-amber-400"></i>
-                        <h3 class="font-extrabold text-lg text-white" data-i18n="sms_banner_title">Broadcast Appreciation SMS Blast</h3>
+                        <h3 id="lbl_broadcast_title" class="font-extrabold text-lg">Broadcast Appreciation SMS Blast</h3>
                     </div>
-                    <p class="text-xs text-slate-300 mt-1" data-i18n="sms_banner_sub">Send a direct appreciation SMS blast to all captured phone numbers.</p>
+                    <p id="lbl_broadcast_sub" class="text-xs text-slate-300 mt-1">Send a direct message to all {{ attendees|length }} captured phone numbers.</p>
                 </div>
 
                 <form action="/api/organizer/thankyou" method="POST" class="w-full md:w-auto flex flex-col sm:flex-row gap-3">
-                    <input 
-                        type="text" 
-                        name="thank_you_message" 
-                        id="smsInput"
-                        value="Thank you for attending Bagga! Your participation and feedback made this event special." 
-                        class="px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-medium focus:outline-none focus:border-cyan-400 w-full sm:w-80 shadow-inner"
-                        required
-                    >
-                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-amber-500/20 transition duration-200 active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-paper-plane"></i> <span data-i18n="btn_send_sms">Send SMS Blast</span>
+                    <input type="text" id="input_broadcast_msg" name="thank_you_message" value="Thank you for attending Bagga! Your live feedback improved our event." class="px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-cyan-400 w-full sm:w-80" required>
+                    <button type="submit" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-lg transition active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-paper-plane"></i> <span id="lbl_send_blast_btn">Send SMS Blast</span>
                     </button>
                 </form>
             </div>
         </div>
 
         <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
             <!-- Left Panel: Audience Directory -->
             <div class="lg:col-span-1 space-y-6">
-                <div class="glass-card border border-slate-200 rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
-                        <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-address-book text-blue-600"></i> <span data-i18n="dir_title">Audience Directory</span>
-                        </h3>
-                        <span class="text-[10px] font-extrabold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
-                            {{ attendees|length }} <span data-i18n="tag_active">Active</span>
-                        </span>
+                <div class="glass-card border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
+                            <h3 id="lbl_audience_title" class="font-black text-slate-900 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-address-book text-blue-600"></i> Audience Directory
+                            </h3>
+                            <span id="badge_active_att" class="text-[10px] font-extrabold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                                {{ attendees|length }} Active
+                            </span>
+                        </div>
+
+                        <div class="space-y-3">
+                            {% for att in attendees %}
+                            <div class="attendee-card p-4 rounded-xl bg-slate-50 border border-slate-200 {% if loop.index > 2 %}hidden{% endif %}">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-black text-blue-700">{{ att.anon_id or ("Attendee#" ~ att.phone_number[-4:]) }}</span>
+                                    <span class="text-[10px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold border border-slate-200">
+                                        {{ att.feedback_count }} <span class="lbl_notes_suffix">notes</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs font-mono text-slate-800 font-bold mb-3">{{ att.phone_number }}</p>
+                                
+                                <form action="/api/organizer/reply" method="POST" class="flex gap-2">
+                                    <input type="hidden" name="phone_number" value="{{ att.phone_number }}">
+                                    <input type="text" id="reply_input_{{ att.phone_number|replace('+', '') }}" name="message" placeholder="Direct SMS reply..." class="sms-reply-input w-full px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600" required>
+                                    <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg transition active:scale-95">SMS</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-8 text-slate-400 text-xs">No phone numbers captured yet.</div>
+                            {% endfor %}
+                        </div>
                     </div>
 
-                    <div class="space-y-3 max-h-[520px] overflow-y-auto pr-1">
-                        {% for att in attendees %}
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-300 transition">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-black text-blue-700">{{ att.anon_id or ("Attendee#" ~ att.phone_number[-4:]) }}</span>
-                                <span class="text-[10px] font-mono bg-white text-slate-600 px-2 py-0.5 rounded font-bold border border-slate-200 shadow-sm">
-                                    {{ att.feedback_count }} <span data-i18n="tag_notes">notes</span>
-                                </span>
-                            </div>
-                            <p class="text-xs font-mono text-slate-800 font-bold mb-3">{{ att.phone_number }}</p>
-                            
-                            <form action="/api/organizer/reply" method="POST" class="flex gap-2">
-                                <input type="hidden" name="phone_number" value="{{ att.phone_number }}">
-                                <input type="text" name="message" data-i18n-placeholder="reply_placeholder" placeholder="Direct SMS reply..." class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-600 shadow-sm" required>
-                                <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg transition active:scale-95 shadow-sm">SMS</button>
-                            </form>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-8 text-slate-400 text-xs font-medium">
-                            <i class="fa-solid fa-users-slash text-2xl mb-2 text-slate-300"></i>
-                            <p data-i18n="empty_dir">No phone numbers captured yet.</p>
-                        </div>
-                        {% endfor %}
+                    {% if attendees|length > 2 %}
+                    <div class="p-3 bg-slate-50 border-t border-slate-200 text-center">
+                        <button id="toggleAttBtn" onclick="toggleAttendees()" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-blue-700 bg-white hover:bg-blue-50 px-4 py-1.5 border border-blue-200 rounded-xl transition shadow-sm">
+                            <i id="toggleAttIcon" class="fa-solid fa-chevron-down text-[10px]"></i> 
+                            <span id="toggleAttText">Show All Attendees ({{ attendees|length }})</span>
+                        </button>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -193,13 +193,13 @@
                 <div class="glass-card border border-slate-200 rounded-2xl overflow-hidden">
                     <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                         <div>
-                            <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-comments text-blue-600"></i> <span data-i18n="feed_title">Live Feedback Feed</span>
+                            <h3 id="lbl_feed_title" class="font-black text-slate-900 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-comments text-blue-600"></i> Live Feedback & Triage
                             </h3>
-                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="feed_sub">Displaying real-time notes from USSD menu interactions</p>
+                            <p id="lbl_feed_sub" class="text-xs text-slate-500 mt-0.5">Real-time USSD input parsed with sentiment engine</p>
                         </div>
                         <span id="feedCounter" class="text-xs font-extrabold px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
-                            <span data-i18n="tag_count_prefix">Showing</span> {{ [3, feedbacks|length]|min }} <span data-i18n="tag_count_of">of</span> {{ feedbacks|length }}
+                            Showing {{ [3, feedbacks|length]|min }} of {{ feedbacks|length }}
                         </span>
                     </div>
 
@@ -207,70 +207,66 @@
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                                    <th class="py-3.5 px-6" data-i18n="th_attendee">Attendee</th>
-                                    <th class="py-3.5 px-6" data-i18n="th_channel">Channel</th>
-                                    <th class="py-3.5 px-6" data-i18n="th_category">Category</th>
-                                    <th class="py-3.5 px-6" data-i18n="th_message">Message Note</th>
-                                    <th class="py-3.5 px-6" data-i18n="th_urgency">Urgency</th>
-                                    <th class="py-3.5 px-6 text-right" data-i18n="th_action">Action</th>
+                                    <th id="th_attendee" class="py-3.5 px-4">Attendee</th>
+                                    <th id="th_category" class="py-3.5 px-4">Category</th>
+                                    <th id="th_raw" class="py-3.5 px-4">Raw / Translation</th>
+                                    <th id="th_urgency" class="py-3.5 px-4">Urgency</th>
+                                    <th id="th_action" class="py-3.5 px-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-xs font-medium">
                                 {% for fb in feedbacks %}
                                 <tr class="feedback-row hover:bg-blue-50/30 transition {% if loop.index > 3 %}hidden{% endif %}">
-                                    <td class="py-4 px-6 font-black text-blue-700">{{ fb.anon_id or "Attendee" }}</td>
-                                    <td class="py-4 px-6">
-                                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-100 border border-slate-200 text-slate-700">
-                                            {{ fb.channel }}
+                                    <td class="py-4 px-4 font-black text-blue-700">
+                                        <span class="lbl_attendee_name">{{ fb.anon_id or "Attendee" }}</span>
+                                        <div class="text-[10px] font-mono text-slate-400 uppercase">{{ fb.language or "en" }}</div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <span class="cat-badge px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-700 border border-slate-200" data-cat="{{ fb.category }}">
+                                            {{ fb.category }}
                                         </span>
                                     </td>
-                                    <td class="py-4 px-6">
-                                        {% if fb.category == 'PRAISE' %}
-                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" data-i18n="cat_praise">Praise</span>
-                                        {% elif fb.category == 'SOUND/AUDIO' %}
-                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-50 text-amber-700 border border-amber-200" data-i18n="cat_sound">Sound / Audio</span>
-                                        {% elif fb.category == 'AC/FACILITIES' %}
-                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200" data-i18n="cat_facilities">Facilities</span>
-                                        {% else %}
-                                            <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-600 border border-slate-200" data-i18n="cat_general">General Note</span>
+                                    <td class="py-4 px-4 max-w-xs leading-relaxed">
+                                        <div class="text-slate-900 font-bold">"{{ fb.raw_text }}"</div>
+                                        {% if fb.translated_text and fb.translated_text != fb.raw_text %}
+                                            <div class="text-[11px] text-blue-700 italic mt-0.5"><i class="fa-solid fa-language"></i> EN: {{ fb.translated_text }}</div>
                                         {% endif %}
                                     </td>
-                                    <td class="py-4 px-6 text-slate-900 font-bold max-w-xs leading-relaxed">{{ fb.raw_text }}</td>
-                                    <td class="py-4 px-6">
+                                    <td class="py-4 px-4">
                                         {% if fb.urgency == 'HIGH' %}
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> <span data-i18n="urgency_high">HIGH</span>
+                                            <span class="urgency-high inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> HIGH
                                             </span>
                                         {% else %}
-                                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500" data-i18n="urgency_normal">NORMAL</span>
+                                            <span class="urgency-normal px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500">NORMAL</span>
                                         {% endif %}
                                     </td>
-                                    <td class="py-4 px-6 text-right">
-                                        <form action="/api/organizer/delete/{{ fb.id }}" method="POST" onsubmit="return confirm('Mark this concern as resolved and remove?');">
-                                            <button type="submit" title="Clear Note" class="px-2.5 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition active:scale-95 flex items-center gap-1.5 ml-auto">
-                                                <i class="fa-solid fa-trash-can"></i> <span data-i18n="btn_delete">Clear</span>
+                                    <td class="py-4 px-4 text-right space-y-1">
+                                        <button onclick="autofillReply('{{ fb.phone_number|replace('+', '') }}', '{{ (fb.suggested_reply or 'Thank you for your feedback! Our team is addressing this now.')|escape }}')" class="btn-ai-reply px-2 py-1 text-[10px] font-extrabold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition flex items-center gap-1 ml-auto">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> <span class="lbl_ai_reply">AI Reply</span>
+                                        </button>
+
+                                        <form action="/api/organizer/delete/{{ fb.id }}" method="POST" onsubmit="return confirm('Clear this note?');">
+                                            <button type="submit" class="btn-clear px-2 py-1 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded transition flex items-center gap-1 ml-auto">
+                                                <i class="fa-solid fa-trash-can"></i> <span class="lbl_clear">Clear</span>
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center py-12 text-slate-400 text-xs font-medium">
-                                        <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300 block"></i>
-                                        <span data-i18n="empty_feed">No feedback submitted yet.</span>
-                                    </td>
+                                    <td colspan="5" class="text-center py-12 text-slate-400 text-xs">No feedback submitted yet.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- SHOW MORE / SHOW LESS BUTTON BAR -->
                     {% if feedbacks|length > 3 %}
                     <div class="p-4 bg-slate-50 border-t border-slate-200 text-center">
-                        <button id="toggleFeedBtn" onclick="toggleFeed()" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-extrabold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-xl transition duration-200 shadow-sm active:scale-95">
+                        <button id="toggleFeedBtn" onclick="toggleFeed()" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-extrabold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-xl transition shadow-sm">
                             <i id="toggleFeedIcon" class="fa-solid fa-chevron-down"></i> 
-                            <span id="toggleFeedText" data-i18n="btn_show_more">Show All Submissions ({{ feedbacks|length }})</span>
+                            <span id="toggleFeedText">Show All Submissions ({{ feedbacks|length }})</span>
                         </button>
                     </div>
                     {% endif %}
@@ -281,24 +277,246 @@
         </div>
     </main>
 
-    <!-- Client-Side Translation & Feed Toggle Script -->
+    <!-- COMPLETE MULTI-LINGUAL DICTIONARY -->
     <script>
-        let isShowingAll = false;
-        const totalFeedbacks = {{ feedbacks|length }};
+        const DASH_TRANSLATIONS = {
+            en: {
+                liveEngine: "LIVE ENGINE",
+                subhead: "Real-Time USSD Telemetry & Operations Intelligence",
+                exportBtn: "Export Post-Event Report (PDF)",
+                refreshBtn: "Refresh",
+                statNotes: "Total USSD Notes",
+                statUrgency: "High Urgency Alerts",
+                statTriage: "Automated Triage",
+                statHealth: "Venue Health Index",
+                statB2b: "B2B Service Level Metric",
+                statAudience: "Captured Audience",
+                statLeads: "Auto-saved Phone Leads",
+                broadcastTitle: "Broadcast Appreciation SMS Blast",
+                broadcastSub: "Send a direct message to all {{ attendees|length }} captured phone numbers.",
+                broadcastPlaceholder: "Thank you for attending Bagga! Your live feedback improved our event.",
+                sendBlastBtn: "Send SMS Blast",
+                audienceTitle: "Audience Directory",
+                activeBadge: "{{ attendees|length }} Active",
+                notesSuffix: "notes",
+                smsPlaceholder: "Direct SMS reply...",
+                showAllAtt: "Show All Attendees ({{ attendees|length }})",
+                showLessAtt: "Show Less",
+                feedTitle: "Live Feedback & Triage",
+                feedSub: "Real-time USSD input parsed with sentiment engine",
+                showingCount: "Showing {{ [3, feedbacks|length]|min }} of {{ feedbacks|length }}",
+                showingAllCount: "Showing {{ feedbacks|length }} of {{ feedbacks|length }}",
+                thAttendee: "Attendee",
+                thCategory: "Category",
+                thRaw: "Raw / Translation",
+                thUrgency: "Urgency",
+                thAction: "Action",
+                showAllFeed: "Show All Submissions ({{ feedbacks|length }})",
+                showLessFeed: "Show Less",
+                aiReplyBtn: "AI Reply",
+                clearBtn: "Clear",
+                urgencyHigh: "HIGH",
+                urgencyNormal: "NORMAL",
+                catMap: {
+                    'PRAISE': 'PRAISE',
+                    'SOUND/AUDIO': 'SOUND/AUDIO',
+                    'AC/FACILITIES': 'AC/FACILITIES',
+                    'GENERAL': 'GENERAL'
+                },
+                attendeeLabel: "Attendee"
+            },
+            lg: {
+                liveEngine: "EKYUMA EKILIMU",
+                subhead: "Ebyuma bya USSD n'Okufuga Ekisaawe mu Boodi Enyini",
+                exportBtn: "Ofulya Alipota y'Ekisaawe (PDF)",
+                refreshBtn: "Zzaamu Obupya",
+                statNotes: "Omuwendo gw'Ebirowoozo",
+                statUrgency: "Amawulire ag'Amangu",
+                statTriage: "Okunsunsula okw'Ekyuma",
+                statHealth: "Kipimo ky'Obulamu bw'Ekisaawe",
+                statB2b: "Omutindo gw'Abaweereza mu B2B",
+                statAudience: "Abalabi Abakwatiddwa",
+                statLeads: "Enamba z'Essimu ezeeterekedde",
+                broadcastTitle: "Olubu lw'Obubaka bw'Okwebaza",
+                broadcastSub: "Weereza obubaka obutereevu ew'abalabi bano {{ attendees|length }} abali mu nkutu.",
+                broadcastPlaceholder: "Webale okujja mu Bagga! Ebirowoozo byo bilongosezza omukolo gwaffe.",
+                sendBlastBtn: "Weereza Obubaka",
+                audienceTitle: "Olukalala lwa Abalabi",
+                activeBadge: "{{ attendees|length }} Abali mu Nkutu",
+                notesSuffix: "ebirowoozo",
+                smsPlaceholder: "Weereza SMS ey'obutereevu...",
+                showAllAtt: "Laga Abalabi Bonna ({{ attendees|length }})",
+                showLessAtt: "Laga Batono",
+                feedTitle: "Ebirowoozo eby'Amangu n'Okunsunsula",
+                feedSub: "Okuwingiza obubaka bwa USSD obunyonnyolwa ekyuma ky'amagezi",
+                showingCount: "Ebiragidwa {{ [3, feedbacks|length]|min }} ku {{ feedbacks|length }}",
+                showingAllCount: "Ebiragidwa {{ feedbacks|length }} ku {{ feedbacks|length }}",
+                thAttendee: "Omulabi",
+                thCategory: "Kategoria",
+                thRaw: "Obubaka / Envunula",
+                thUrgency: "Amangu",
+                thAction: "Kola",
+                showAllFeed: "Laga Ebirowoozo Bonna ({{ feedbacks|length }})",
+                showLessFeed: "Laga Batono",
+                aiReplyBtn: "Okuddamu ku AI",
+                clearBtn: "Sazaamu",
+                urgencyHigh: "AMANGU NYO",
+                urgencyNormal: "BULIJO",
+                catMap: {
+                    'PRAISE': 'OKUSIIMA',
+                    'SOUND/AUDIO': 'EDOBOOZI',
+                    'AC/FACILITIES': "EBY'OBULABIRIZI",
+                    'GENERAL': "EKY'ABULIJJO"
+                },
+                attendeeLabel: "Omulabi"
+            },
+            sw: {
+                liveEngine: "INJINI MOJA KWA MOJA",
+                subhead: "Takwimu za USSD na Akili ya Uendeshaji kwa Wakati Halisi",
+                exportBtn: "Pakua Ripoti ya Tukio (PDF)",
+                refreshBtn: "Anzisha Upya",
+                statNotes: "Jumla ya Ujumbe za USSD",
+                statUrgency: "Tahadhari za Dharura",
+                statTriage: "Uchambuzi wa Kiotomatiki",
+                statHealth: "Kiwango cha Afya ya Ukumbi",
+                statB2b: "Kipimo cha Huduma ya B2B",
+                statAudience: "Watazamaji Walionaswa",
+                statLeads: "Nambari za Simu Zilizohifadhiwa",
+                broadcastTitle: "Ujumbe Mfupi wa Tangazo la Shukrani",
+                broadcastSub: "Tuma ujumbe wa moja kwa moja kwa nambari zote {{ attendees|length }} zilizonaswa.",
+                broadcastPlaceholder: "Asante kwa kuhudhuria Bagga! Maoni yako yameboresha tukio letu.",
+                sendBlastBtn: "Tuma Ujumbe Mfupi",
+                audienceTitle: "Orodha ya Watazamaji",
+                activeBadge: "{{ attendees|length }} Wanaofanya Kazi",
+                notesSuffix: "ujumbe",
+                smsPlaceholder: "Jibu kwa SMS moja kwa moja...",
+                showAllAtt: "Onyesha Watazamaji Wote ({{ attendees|length }})",
+                showLessAtt: "Onyesha Chache",
+                feedTitle: "Maoni ya Moja kwa Moja na Uchambuzi",
+                feedSub: "Ingizo la USSD la wakati halisi lililochanganuliwa na injini ya hisia",
+                showingCount: "Inaonyesha {{ [3, feedbacks|length]|min }} kati ya {{ feedbacks|length }}",
+                showingAllCount: "Inaonyesha {{ feedbacks|length }} kati ya {{ feedbacks|length }}",
+                thAttendee: "Mhudhuriaji",
+                thCategory: "Aina",
+                thRaw: "Ujumbe / Tafsiri",
+                thUrgency: "Dharura",
+                thAction: "Hatua",
+                showAllFeed: "Onyesha Ujumbe Wote ({{ feedbacks|length }})",
+                showLessFeed: "Onyesha Chache",
+                aiReplyBtn: "Jibu la AI",
+                clearBtn: "Futa",
+                urgencyHigh: "DHANULI SANA",
+                urgencyNormal: "KAWAIDA",
+                catMap: {
+                    'PRAISE': 'SIFA',
+                    'SOUND/AUDIO': 'SAUTI / MFUMO',
+                    'AC/FACILITIES': 'VIFAA / MAJENGO',
+                    'GENERAL': 'KAWAIDA'
+                },
+                attendeeLabel: "Mhudhuriaji"
+            }
+        };
 
+        function switchDashboardLanguage(lang) {
+            const dict = DASH_TRANSLATIONS[lang] || DASH_TRANSLATIONS.en;
+            
+            // Header
+            document.getElementById('lbl_live_engine').innerText = dict.liveEngine;
+            document.getElementById('lbl_subhead').innerText = dict.subhead;
+            document.getElementById('lbl_export_btn').innerText = dict.exportBtn;
+            document.getElementById('lbl_refresh_btn').innerText = dict.refreshBtn;
+
+            // Stats
+            document.getElementById('lbl_stat_notes').innerText = dict.statNotes;
+            document.getElementById('lbl_stat_urgency').innerText = dict.statUrgency;
+            document.getElementById('lbl_stat_triage').innerText = dict.statTriage;
+            document.getElementById('lbl_stat_health').innerText = dict.statHealth;
+            document.getElementById('lbl_stat_b2b').innerText = dict.statB2b;
+            document.getElementById('lbl_stat_audience').innerText = dict.statAudience;
+            document.getElementById('lbl_stat_leads').innerText = dict.statLeads;
+
+            // Broadcast
+            document.getElementById('lbl_broadcast_title').innerText = dict.broadcastTitle;
+            document.getElementById('lbl_broadcast_sub').innerText = dict.broadcastSub;
+            document.getElementById('input_broadcast_msg').value = dict.broadcastPlaceholder;
+            document.getElementById('lbl_send_blast_btn').innerText = dict.sendBlastBtn;
+
+            // Audience Section
+            document.getElementById('lbl_audience_title').innerHTML = `<i class="fa-solid fa-address-book text-blue-600"></i> ${dict.audienceTitle}`;
+            document.getElementById('badge_active_att').innerText = dict.activeBadge;
+            
+            document.querySelectorAll('.lbl_notes_suffix').forEach(el => el.innerText = dict.notesSuffix);
+            document.querySelectorAll('.sms-reply-input').forEach(el => el.placeholder = dict.smsPlaceholder);
+            
+            const toggleAttBtn = document.getElementById('toggleAttText');
+            if (toggleAttBtn) {
+                toggleAttBtn.innerText = isShowingAllAtt ? dict.showLessAtt : dict.showAllAtt;
+            }
+
+            // Feed Section
+            document.getElementById('lbl_feed_title').innerHTML = `<i class="fa-solid fa-comments text-blue-600"></i> ${dict.feedTitle}`;
+            document.getElementById('lbl_feed_sub').innerText = dict.feedSub;
+            document.getElementById('feedCounter').innerText = isShowingAllFeed ? dict.showingAllCount : dict.showingCount;
+
+            document.getElementById('th_attendee').innerText = dict.thAttendee;
+            document.getElementById('th_category').innerText = dict.thCategory;
+            document.getElementById('th_raw').innerText = dict.thRaw;
+            document.getElementById('th_urgency').innerText = dict.thUrgency;
+            document.getElementById('th_action').innerText = dict.thAction;
+
+            const toggleFeedBtn = document.getElementById('toggleFeedText');
+            if (toggleFeedBtn) {
+                toggleFeedBtn.innerText = isShowingAllFeed ? dict.showLessFeed : dict.showAllFeed;
+            }
+
+            // Dynamic Row Elements
+            document.querySelectorAll('.lbl_ai_reply').forEach(el => el.innerText = dict.aiReplyBtn);
+            document.querySelectorAll('.lbl_clear').forEach(el => el.innerText = dict.clearBtn);
+
+            document.querySelectorAll('.urgency-high').forEach(el => {
+                el.childNodes[el.childNodes.length - 1].textContent = " " + dict.urgencyHigh;
+            });
+            document.querySelectorAll('.urgency-normal').forEach(el => {
+                el.innerText = dict.urgencyNormal;
+            });
+
+            document.querySelectorAll('.cat-badge').forEach(el => {
+                const rawCat = el.getAttribute('data-cat');
+                el.innerText = dict.catMap[rawCat] || rawCat;
+            });
+
+            document.querySelectorAll('.lbl_attendee_name').forEach(el => {
+                if (el.innerText.includes('Attendee')) {
+                    el.innerText = el.innerText.replace('Attendee', dict.attendeeLabel);
+                } else if (el.innerText.includes('Omulabi')) {
+                    el.innerText = el.innerText.replace('Omulabi', dict.attendeeLabel);
+                } else if (el.innerText.includes('Mhudhuriaji')) {
+                    el.innerText = el.innerText.replace('Mhudhuriaji', dict.attendeeLabel);
+                }
+            });
+
+            localStorage.setItem('bagga_dash_lang', lang);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('bagga_dash_lang') || 'en';
+            document.getElementById('dashLangSelect').value = savedLang;
+            switchDashboardLanguage(savedLang);
+        });
+
+        let isShowingAllFeed = false;
         function toggleFeed() {
             const hiddenRows = document.querySelectorAll('.feedback-row');
             const btnText = document.getElementById('toggleFeedText');
             const btnIcon = document.getElementById('toggleFeedIcon');
             const feedCounter = document.getElementById('feedCounter');
-            const activeLang = localStorage.getItem('bagga_dashboard_lang') || 'en';
-            const dict = translations[activeLang] || translations.en;
+            const lang = document.getElementById('dashLangSelect').value;
+            const dict = DASH_TRANSLATIONS[lang] || DASH_TRANSLATIONS.en;
 
-            isShowingAll = !isShowingAll;
-
+            isShowingAllFeed = !isShowingAllFeed;
             hiddenRows.forEach((row, index) => {
                 if (index >= 3) {
-                    if (isShowingAll) {
+                    if (isShowingAllFeed) {
                         row.classList.remove('hidden');
                     } else {
                         row.classList.add('hidden');
@@ -306,182 +524,54 @@
                 }
             });
 
-            if (isShowingAll) {
-                btnText.textContent = dict.btn_show_less || "Show Top 3 Only";
+            if (isShowingAllFeed) {
+                btnText.innerText = dict.showLessFeed;
                 btnIcon.className = "fa-solid fa-chevron-up";
-                feedCounter.innerHTML = `<span data-i18n="tag_count_prefix">${dict.tag_count_prefix}</span> ${totalFeedbacks} <span data-i18n="tag_count_of">${dict.tag_count_of}</span> ${totalFeedbacks}`;
+                feedCounter.innerText = dict.showingAllCount;
             } else {
-                btnText.textContent = `${dict.btn_show_more_prefix || "Show All Submissions"} (${totalFeedbacks})`;
+                btnText.innerText = dict.showAllFeed;
                 btnIcon.className = "fa-solid fa-chevron-down";
-                feedCounter.innerHTML = `<span data-i18n="tag_count_prefix">${dict.tag_count_prefix}</span> 3 <span data-i18n="tag_count_of">${dict.tag_count_of}</span> ${totalFeedbacks}`;
+                feedCounter.innerText = dict.showingCount;
             }
         }
 
-        const translations = {
-            en: {
-                badge_live: "LIVE CENTER",
-                subtitle: "Two-Way Telecom & Real-time Event Analytics",
-                btn_refresh: "Refresh Stream",
-                stat_total: "Total Notes Submitted",
-                stat_total_sub: "Stream active via Africa's Talking USSD",
-                stat_urgency: "High Urgency Alerts",
-                stat_urgency_sub: "Heuristic priority detection",
-                stat_audience: "Captured Audience",
-                stat_audience_sub: "Auto-captured phone directory",
-                sms_banner_title: "Broadcast Appreciation SMS Blast",
-                sms_banner_sub: "Send a direct appreciation SMS blast to all captured phone numbers.",
-                sms_default_val: "Thank you for attending Bagga! Your participation and feedback made this event special.",
-                btn_send_sms: "Send SMS Blast",
-                dir_title: "Audience Directory",
-                tag_active: "Active",
-                tag_notes: "notes",
-                reply_placeholder: "Direct SMS reply...",
-                empty_dir: "No phone numbers captured yet.",
-                feed_title: "Live Feedback Feed",
-                feed_sub: "Displaying real-time notes from USSD menu interactions",
-                tag_count_prefix: "Showing",
-                tag_count_of: "of",
-                th_attendee: "Attendee",
-                th_channel: "Channel",
-                th_category: "Category",
-                th_message: "Message Note",
-                th_urgency: "Urgency",
-                th_action: "Action",
-                btn_delete: "Clear",
-                cat_praise: "Praise",
-                cat_sound: "Sound / Audio",
-                cat_facilities: "Facilities",
-                cat_general: "General Note",
-                urgency_high: "HIGH",
-                urgency_normal: "NORMAL",
-                empty_feed: "No feedback submitted yet.",
-                btn_show_more_prefix: "Show All Submissions",
-                btn_show_less: "Show Top 3 Only"
-            },
-            lg: {
-                badge_live: "OMUTIMBWA OULIVE",
-                subtitle: "Okwawulizagana kwaradio n'okwekeneenya ebyokwerinda",
-                btn_refresh: "Zzaamu Bupya",
-                stat_total: "Ebirowoozo Byaweebwa",
-                stat_total_sub: "Omutimbwa gukola ku USSD ya Africa's Talking",
-                stat_urgency: "Amawulire Amangu Ag'okwerinda",
-                stat_urgency_sub: "Okwawula eby'amangu ku eby eby'ambulidde",
-                stat_audience: "Abeetabi Abakwatiddwa",
-                stat_audience_sub: "Enombero z'essimu ezikwatiddwa buli kiseera",
-                sms_banner_title: "Sindika Obubaka Bw'okwebaza eri Buli Muntu",
-                sms_banner_sub: "Sindika obubaka bw'okwebaza eri ennamba z'essimu zonna ezikwatiddwa.",
-                sms_default_val: "Webale okwetaba mu Bagga! Ebirowoozo byammwe byatuyambye nnyo.",
-                btn_send_sms: "Sindika SMS Blast",
-                dir_title: "Ekitabo ky'Ennamba z'Essimu",
-                tag_active: "Mukulio",
-                tag_notes: "ebirowoozo",
-                reply_placeholder: "Ddamu ne SMS...",
-                empty_dir: "Tewali nnamba z'essimu zakakwatibwa.",
-                feed_title: "Amawulire Agayingira Amangu",
-                feed_sub: "Okulaga obubaka obuggya obukyaweebwa mu USSD",
-                tag_count_prefix: "Laga",
-                tag_count_of: "ku",
-                th_attendee: "Omeetabi",
-                th_channel: "Omukutu",
-                th_category: "Omuwendo gwa Kategoria",
-                th_message: "Obubaka bo",
-                th_urgency: "Obwangu",
-                th_action: "Kikolwa",
-                btn_delete: "Ggyamu",
-                cat_praise: "Okusiima",
-                cat_sound: "Edoboozi / Sound",
-                cat_facilities: "Eby'omukutu / AC",
-                cat_general: "Obubaka Obubulijjo",
-                urgency_high: "AMANGU",
-                urgency_normal: "BULIJJO",
-                empty_feed: "Tewali birowoozo biweebwa mangu guno.",
-                btn_show_more_prefix: "Laga Ebirowoozo Zonna",
-                btn_show_less: "Laga Ezisembyeeyo 3 Zokka"
-            },
-            sw: {
-                badge_live: "KITUO CHA MOJA KWA MOJA",
-                subtitle: "Uchanganuzi wa Matukio na Mawasiliano ya Simu",
-                btn_refresh: "Chesa Upya",
-                stat_total: "Jumla ya Maoni Yaliyotumwa",
-                stat_total_sub: "Mtandao unafanya kazi kupitia Africa's Talking USSD",
-                stat_urgency: "Taarifa za Dharura ya Juu",
-                stat_urgency_sub: "Utafutaji wa kipaumbele cha ujumbe",
-                stat_audience: "Watazamaji Waliorekodiwa",
-                stat_audience_sub: "Orodha ya nambari za simu zilizorekodiwa",
-                sms_banner_title: "Tuma Ujumbe wa Shukrani kwa Wote",
-                sms_banner_sub: "Tuma ujumbe wa moja kwa moja wa shukrani kwa nambari zote zilizorekodiwa.",
-                sms_default_val: "Asante kwa kuhudhuria Bagga! Ushiriki wako na maoni yako yamefanya tukio hili kuwa la pekee.",
-                btn_send_sms: "Tuma SMS kwa Wote",
-                dir_title: "Orodha ya Waliohudhuria",
-                tag_active: "Wanaofanya kazi",
-                tag_notes: "maoni",
-                reply_placeholder: "Jibu kwa SMS...",
-                empty_dir: "Hakuna nambari za simu zilizorekodiwa bado.",
-                feed_title: "Mtiririko wa Maoni ya Moja kwa Moja",
-                feed_sub: "Kuonyesha maoni ya hivi karibuni kupitia USSD menu",
-                tag_count_prefix: "Inaonyesha",
-                tag_count_of: "kati ya",
-                th_attendee: "Mshiriki",
-                th_channel: "Njia",
-                th_category: "Aina",
-                th_message: "Ujumbe",
-                th_urgency: "Dharura",
-                th_action: "Kitendo",
-                btn_delete: "Odoa",
-                cat_praise: "Sifa / Sifa",
-                cat_sound: "Sauti / Mfumo wa Sauti",
-                cat_facilities: "Vifaa na Majengo",
-                cat_general: "Ujumbe wa Kawaida",
-                urgency_high: "DHARURA",
-                urgency_normal: "KAWAIDA",
-                empty_feed: "Hakuna maoni yaliyowasilishwa bado.",
-                btn_show_more_prefix: "Onyesha Maoni Yote",
-                btn_show_less: "Onyesha Mapya 3 Tu"
-            }
-        };
+        let isShowingAllAtt = false;
+        function toggleAttendees() {
+            const hiddenAtt = document.querySelectorAll('.attendee-card');
+            const btnText = document.getElementById('toggleAttText');
+            const btnIcon = document.getElementById('toggleAttIcon');
+            const lang = document.getElementById('dashLangSelect').value;
+            const dict = DASH_TRANSLATIONS[lang] || DASH_TRANSLATIONS.en;
 
-        function changeLanguage(lang) {
-            const dict = translations[lang] || translations.en;
-            
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (dict[key]) {
-                    el.textContent = dict[key];
+            isShowingAllAtt = !isShowingAllAtt;
+            hiddenAtt.forEach((card, index) => {
+                if (index >= 2) {
+                    if (isShowingAllAtt) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
                 }
             });
 
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (dict[key]) {
-                    el.setAttribute('placeholder', dict[key]);
-                }
-            });
-
-            const smsInput = document.getElementById('smsInput');
-            if (smsInput) {
-                smsInput.value = dict.sms_default_val;
+            if (isShowingAllAtt) {
+                btnText.innerText = dict.showLessAtt;
+                btnIcon.className = "fa-solid fa-chevron-up text-[10px]";
+            } else {
+                btnText.innerText = dict.showAllAtt;
+                btnIcon.className = "fa-solid fa-chevron-down text-[10px]";
             }
-
-            const btnText = document.getElementById('toggleFeedText');
-            if (btnText) {
-                if (isShowingAll) {
-                    btnText.textContent = dict.btn_show_less || "Show Top 3 Only";
-                } else {
-                    btnText.textContent = `${dict.btn_show_more_prefix || "Show All Submissions"} (${totalFeedbacks})`;
-                }
-            }
-
-            localStorage.setItem('bagga_dashboard_lang', lang);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedLang = localStorage.getItem('bagga_dashboard_lang') || 'en';
-            const langSelect = document.getElementById('langSelect');
-            if (langSelect) {
-                langSelect.value = savedLang;
-                changeLanguage(savedLang);
+        function autofillReply(cleanPhone, replyText) {
+            const inputField = document.getElementById('reply_input_' + cleanPhone);
+            if (inputField) {
+                inputField.value = replyText;
+                inputField.focus();
+                inputField.classList.add('ring-2', 'ring-blue-500');
+                setTimeout(() => inputField.classList.remove('ring-2', 'ring-blue-500'), 1500);
             }
-        });
+        }
     </script>
 </body>
 </html>
