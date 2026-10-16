@@ -26,6 +26,11 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    feedback_columns = {row[1] for row in cursor.execute("PRAGMA table_info(feedback)")}
+    for column in ("phone_number", "language"):
+        if column not in feedback_columns:
+            cursor.execute(f"ALTER TABLE feedback ADD COLUMN {column} TEXT")
     
     # Table for tracking unique attendees
     cursor.execute('''
