@@ -32,7 +32,7 @@
                     <div class="flex items-center gap-2">
                         <h1 class="text-xl font-black tracking-tight text-slate-900">Bagga</h1>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> <span data-i18n="badge_live">FEEDBACK CENTER</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> <span data-i18n="badge_live">LIVE CENTER</span>
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 font-medium" data-i18n="subtitle">Two-Way Telecom & Real-time Event Analytics</p>
@@ -40,8 +40,6 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="/" class="text-xs font-bold text-blue-700">Home</a>
-                <a href="/attendee" class="text-xs font-bold text-blue-700">Submit feedback</a>
                 <!-- Language Selector Dropdown -->
                 <div class="relative inline-flex items-center">
                     <i class="fa-solid fa-language text-blue-600 absolute left-3 pointer-events-none text-sm"></i>
@@ -53,7 +51,7 @@
                     <i class="fa-solid fa-chevron-down text-slate-400 absolute right-3 pointer-events-none text-[10px]"></i>
                 </div>
 
-                <a href="/dashboard" class="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition duration-200 shadow-sm active:scale-95">
+                <a href="/" class="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition duration-200 shadow-sm active:scale-95">
                     <i class="fa-solid fa-arrows-rotate text-blue-600 group-hover:rotate-180 transition-transform duration-500"></i> <span data-i18n="btn_refresh">Refresh Stream</span>
                 </a>
             </div>
@@ -61,11 +59,10 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {% if database_error %}<p role="alert" class="rounded-xl bg-amber-100 text-amber-900 p-4">{{ database_error }}</p>{% endif %}
-
+        
         <!-- Metrics Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
+            
             <!-- Card 1: Total Notes -->
             <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-blue-400 hover:shadow-xl group">
                 <div class="flex items-center justify-between">
@@ -80,7 +77,7 @@
                     </div>
                 </div>
                 <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
-                    <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> <span data-i18n="stat_total_sub">Feedback collected across all channels</span>
+                    <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> <span data-i18n="stat_total_sub">Stream active via Africa's Talking USSD</span>
                 </div>
             </div>
 
@@ -106,7 +103,7 @@
             <div class="glass-card relative overflow-hidden rounded-2xl border border-slate-200 p-6 transition duration-300 hover:border-indigo-400 hover:shadow-xl group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_audience">Registered Attendees</p>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500" data-i18n="stat_audience">Captured Audience</p>
                         <h3 class="text-4xl font-black text-indigo-600 mt-2 tracking-tight">
                             {{ attendees|length }}
                         </h3>
@@ -116,7 +113,7 @@
                     </div>
                 </div>
                 <div class="mt-4 flex items-center text-xs text-slate-500 font-semibold">
-                    <i class="fa-solid fa-mobile-retro text-blue-600 mr-1.5"></i> <span data-i18n="stat_audience_sub">Contacts saved through invitations</span>
+                    <i class="fa-solid fa-mobile-retro text-blue-600 mr-1.5"></i> <span data-i18n="stat_audience_sub">Auto-captured phone directory</span>
                 </div>
             </div>
 
@@ -128,45 +125,36 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-paper-plane text-amber-400"></i>
-                        <h3 class="font-extrabold text-lg text-white" data-i18n="sms_banner_title">Customer reminders and updates</h3>
+                        <h3 class="font-extrabold text-lg text-white" data-i18n="sms_banner_title">Broadcast Appreciation SMS Blast</h3>
                     </div>
-                    <p class="text-xs text-slate-300 mt-1" data-i18n="sms_banner_sub">Send a custom message or the saved event details from this dashboard.</p>
+                    <p class="text-xs text-slate-300 mt-1" data-i18n="sms_banner_sub">Send a direct appreciation SMS blast to all captured phone numbers.</p>
                 </div>
 
-                <form id="customerMessageForm" class="w-full md:max-w-lg space-y-3">
-                    <p id="smsMode" class="text-xs text-cyan-200" role="status">Checking SMS configuration…</p>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="text-xs font-bold">Message type
-                            <select name="type" class="block w-full mt-1 rounded-lg p-2 bg-slate-950 border border-slate-700">
-                                <option value="reminder">Reminder / thank you</option><option value="schedule">Schedule update</option><option value="urgent">Urgent update</option>
-                            </select>
-                        </label>
-                        <label class="text-xs font-bold">Send to
-                            <select name="audience" class="block w-full mt-1 rounded-lg p-2 bg-slate-950 border border-slate-700">
-                                <option value="attendees">Registered attendees</option><option value="speakers">Speakers</option><option value="team">Event team</option><option value="everyone">Everyone</option>
-                            </select>
-                        </label>
-                    </div>
-                    <label for="smsInput" class="block text-xs font-bold">Your message</label>
-                    <textarea id="smsInput" name="message" maxlength="500" rows="3" required class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-sm" placeholder="Write a reminder, thank-you message or event update."></textarea>
-                    <div class="flex flex-wrap gap-3">
-                        <button type="submit" class="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-sm">Send message</button>
-                        <button type="button" id="eventReminderButton" class="px-4 py-3 border border-slate-500 rounded-xl text-sm">Send saved event reminder to attendees</button>
-                    </div>
-                    <p id="messageStatus" role="status" aria-live="polite" class="text-sm text-cyan-200"></p>
+                <form action="/api/organizer/thankyou" method="POST" class="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+                    <input 
+                        type="text" 
+                        name="thank_you_message" 
+                        id="smsInput"
+                        value="Thank you for attending Bagga! Your participation and feedback made this event special." 
+                        class="px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-medium focus:outline-none focus:border-cyan-400 w-full sm:w-80 shadow-inner"
+                        required
+                    >
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-amber-500/20 transition duration-200 active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-paper-plane"></i> <span data-i18n="btn_send_sms">Send SMS Blast</span>
+                    </button>
                 </form>
             </div>
         </div>
 
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
+            
             <!-- Left Panel: Audience Directory -->
             <div class="lg:col-span-1 space-y-6">
                 <div class="glass-card border border-slate-200 rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
                         <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-address-book text-blue-600"></i> <span data-i18n="dir_title">Registered attendees</span>
+                            <i class="fa-solid fa-address-book text-blue-600"></i> <span data-i18n="dir_title">Audience Directory</span>
                         </h3>
                         <span class="text-[10px] font-extrabold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
                             {{ attendees|length }} <span data-i18n="tag_active">Active</span>
@@ -177,19 +165,23 @@
                         {% for att in attendees %}
                         <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-300 transition">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-black text-blue-700">{{ att.name }}</span>
+                                <span class="text-xs font-black text-blue-700">{{ att.anon_id or ("Attendee#" ~ att.phone_number[-4:]) }}</span>
                                 <span class="text-[10px] font-mono bg-white text-slate-600 px-2 py-0.5 rounded font-bold border border-slate-200 shadow-sm">
-                                    Registered
+                                    {{ att.feedback_count }} <span data-i18n="tag_notes">notes</span>
                                 </span>
                             </div>
-                            <p class="text-xs font-mono text-slate-800 font-bold mb-3">{{ att.phone }}</p>
-
-                            <a href="#customerMessageForm" class="text-xs font-bold text-blue-700">Write an update for attendees →</a>
+                            <p class="text-xs font-mono text-slate-800 font-bold mb-3">{{ att.phone_number }}</p>
+                            
+                            <form action="/api/organizer/reply" method="POST" class="flex gap-2">
+                                <input type="hidden" name="phone_number" value="{{ att.phone_number }}">
+                                <input type="text" name="message" data-i18n-placeholder="reply_placeholder" placeholder="Direct SMS reply..." class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-600 shadow-sm" required>
+                                <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg transition active:scale-95 shadow-sm">SMS</button>
+                            </form>
                         </div>
                         {% else %}
                         <div class="text-center py-8 text-slate-400 text-xs font-medium">
                             <i class="fa-solid fa-users-slash text-2xl mb-2 text-slate-300"></i>
-                            <p data-i18n="empty_dir">No registered attendees yet.</p>
+                            <p data-i18n="empty_dir">No phone numbers captured yet.</p>
                         </div>
                         {% endfor %}
                     </div>
@@ -204,7 +196,7 @@
                             <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
                                 <i class="fa-solid fa-comments text-blue-600"></i> <span data-i18n="feed_title">Live Feedback Feed</span>
                             </h3>
-                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="feed_sub">Feedback from SMS, USSD and the web. Refresh to load new notes.</p>
+                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="feed_sub">Displaying real-time notes from USSD menu interactions</p>
                         </div>
                         <span id="feedCounter" class="text-xs font-extrabold px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
                             <span data-i18n="tag_count_prefix">Showing</span> {{ [3, feedbacks|length]|min }} <span data-i18n="tag_count_of">of</span> {{ feedbacks|length }}
@@ -220,7 +212,7 @@
                                     <th class="py-3.5 px-6" data-i18n="th_category">Category</th>
                                     <th class="py-3.5 px-6" data-i18n="th_message">Message Note</th>
                                     <th class="py-3.5 px-6" data-i18n="th_urgency">Urgency</th>
-
+                                    <th class="py-3.5 px-6 text-right" data-i18n="th_action">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-xs font-medium">
@@ -235,9 +227,9 @@
                                     <td class="py-4 px-6">
                                         {% if fb.category == 'PRAISE' %}
                                             <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" data-i18n="cat_praise">Praise</span>
-                                        {% elif fb.category in ['SOUND/AUDIO', 'AUDIO_LOGISTICS'] %}
+                                        {% elif fb.category == 'SOUND/AUDIO' %}
                                             <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-50 text-amber-700 border border-amber-200" data-i18n="cat_sound">Sound / Audio</span>
-                                        {% elif fb.category in ['AC/FACILITIES', 'FACILITIES'] %}
+                                        {% elif fb.category == 'AC/FACILITIES' %}
                                             <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200" data-i18n="cat_facilities">Facilities</span>
                                         {% else %}
                                             <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-600 border border-slate-200" data-i18n="cat_general">General Note</span>
@@ -250,14 +242,20 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> <span data-i18n="urgency_high">HIGH</span>
                                             </span>
                                         {% else %}
-                                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500" >{{ fb.urgency }}</span>
+                                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500" data-i18n="urgency_normal">NORMAL</span>
                                         {% endif %}
                                     </td>
-
+                                    <td class="py-4 px-6 text-right">
+                                        <form action="/api/organizer/delete/{{ fb.id }}" method="POST" onsubmit="return confirm('Mark this concern as resolved and remove?');">
+                                            <button type="submit" title="Clear Note" class="px-2.5 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition active:scale-95 flex items-center gap-1.5 ml-auto">
+                                                <i class="fa-solid fa-trash-can"></i> <span data-i18n="btn_delete">Clear</span>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-12 text-slate-400 text-xs font-medium">
+                                    <td colspan="6" class="text-center py-12 text-slate-400 text-xs font-medium">
                                         <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300 block"></i>
                                         <span data-i18n="empty_feed">No feedback submitted yet.</span>
                                     </td>
@@ -271,7 +269,7 @@
                     {% if feedbacks|length > 3 %}
                     <div class="p-4 bg-slate-50 border-t border-slate-200 text-center">
                         <button id="toggleFeedBtn" onclick="toggleFeed()" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-extrabold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-xl transition duration-200 shadow-sm active:scale-95">
-                            <i id="toggleFeedIcon" class="fa-solid fa-chevron-down"></i>
+                            <i id="toggleFeedIcon" class="fa-solid fa-chevron-down"></i> 
                             <span id="toggleFeedText" data-i18n="btn_show_more">Show All Submissions ({{ feedbacks|length }})</span>
                         </button>
                     </div>
@@ -285,44 +283,6 @@
 
     <!-- Client-Side Translation & Feed Toggle Script -->
     <script>
-        const messageForm = document.getElementById('customerMessageForm');
-        const reminderButton = document.getElementById('eventReminderButton');
-        async function sendDashboardMessage(endpoint, payload) {
-            const status = document.getElementById('messageStatus');
-            const buttons = messageForm.querySelectorAll('button');
-            buttons.forEach(button => { button.disabled = true; });
-            status.textContent = 'Sending…';
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || data.message || 'Could not send.');
-                status.textContent = data.sent_count !== undefined
-                    ? `${data.sent_count} accepted, ${data.failed_count} failed.`
-                    : data.message;
-            } catch (error) { status.textContent = error.message; }
-            finally { buttons.forEach(button => { button.disabled = false; }); }
-        }
-        messageForm.addEventListener('submit', event => {
-            event.preventDefault();
-            const payload = Object.fromEntries(new FormData(messageForm));
-            payload.message = payload.message.trim();
-            if (!payload.message) { document.getElementById('messageStatus').textContent = 'Enter a message.'; return; }
-            sendDashboardMessage('/announcements', payload);
-        });
-        reminderButton.addEventListener('click', () => sendDashboardMessage('/reminders', {}));
-        fetch('/communications/status').then(response => {
-            if (!response.ok) throw new Error();
-            return response.json();
-        }).then(data => {
-            document.getElementById('smsMode').textContent = !data.sms_configured
-                ? 'SMS setup is needed before sending.'
-                : data.sms_environment === 'sandbox'
-                    ? 'Sandbox: messages appear in the Africa’s Talking simulator.'
-                    : 'Live SMS: messages will be sent to recipients’ phones.';
-        }).catch(() => { document.getElementById('smsMode').textContent = 'SMS configuration could not be checked.'; });
         let isShowingAll = false;
         const totalFeedbacks = {{ feedbacks|length }};
 
@@ -359,26 +319,26 @@
 
         const translations = {
             en: {
-                badge_live: "FEEDBACK CENTER",
+                badge_live: "LIVE CENTER",
                 subtitle: "Two-Way Telecom & Real-time Event Analytics",
                 btn_refresh: "Refresh Stream",
                 stat_total: "Total Notes Submitted",
-                stat_total_sub: "Feedback collected across all channels",
+                stat_total_sub: "Stream active via Africa's Talking USSD",
                 stat_urgency: "High Urgency Alerts",
                 stat_urgency_sub: "Heuristic priority detection",
-                stat_audience: "Registered Attendees",
-                stat_audience_sub: "Contacts saved through invitations",
-                sms_banner_title: "Customer reminders and updates",
-                sms_banner_sub: "Send a custom message or the saved event details from this dashboard.",
+                stat_audience: "Captured Audience",
+                stat_audience_sub: "Auto-captured phone directory",
+                sms_banner_title: "Broadcast Appreciation SMS Blast",
+                sms_banner_sub: "Send a direct appreciation SMS blast to all captured phone numbers.",
                 sms_default_val: "Thank you for attending Bagga! Your participation and feedback made this event special.",
                 btn_send_sms: "Send SMS Blast",
-                dir_title: "Registered attendees",
+                dir_title: "Audience Directory",
                 tag_active: "Active",
                 tag_notes: "notes",
                 reply_placeholder: "Direct SMS reply...",
-                empty_dir: "No registered attendees yet.",
+                empty_dir: "No phone numbers captured yet.",
                 feed_title: "Live Feedback Feed",
-                feed_sub: "Feedback from SMS, USSD and the web. Refresh to load new notes.",
+                feed_sub: "Displaying real-time notes from USSD menu interactions",
                 tag_count_prefix: "Showing",
                 tag_count_of: "of",
                 th_attendee: "Attendee",
@@ -482,8 +442,7 @@
 
         function changeLanguage(lang) {
             const dict = translations[lang] || translations.en;
-
-            document.documentElement.lang = lang;
+            
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (dict[key]) {
@@ -500,7 +459,7 @@
 
             const smsInput = document.getElementById('smsInput');
             if (smsInput) {
-                smsInput.placeholder = dict.sms_default_val;
+                smsInput.value = dict.sms_default_val;
             }
 
             const btnText = document.getElementById('toggleFeedText');
