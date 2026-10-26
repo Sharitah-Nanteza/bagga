@@ -8,7 +8,7 @@ Bagga  enables conference and event organizers to collect real-time feedback fro
 
 ## 🚀 Key Features
 
-* **Zero-Internet Accessibility:** Attendees participate via simple USSD codes (`*384*...#`) or Voice hotline calls.
+* **Zero-Internet Accessibility:** Attendees participate via simple USSD codes (`*384*55658#`) or Voice hotline calls.
 * **Cryptographic Anonymity:** Phone numbers are hashed using MD5 (`Attendee#XXXXX`) at the gateway layer, preserving privacy while enabling airtime rewards.
 * **Gemini AI Classification:** Raw feedback notes are analyzed instantly for operational category (Audio, Facilities, Schedule) and urgency level (High, Medium, Low).
 * **Organizer Command Center:** Real-time web dashboard displaying live stream metrics, active channel status, and high-urgency alerts.
