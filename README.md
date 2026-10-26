@@ -53,10 +53,8 @@ Configure Africa's Talking to send incoming SMS to `https://your-public-host/api
 ### 3. Run Application
 ```bash
 python3 app.py
-```
-Access the organizer dashboard at `http://127.0.0.1:5000`.
+`
 
----
 
 ## 🧪 Simulation & Testing
 
@@ -69,3 +67,4 @@ curl -X POST http://127.0.0.1:5000/api/ussd \
   -d "text=4*The room temperature is way too hot"
 ```
 
+Live Demo https://bagga.onrender.com
