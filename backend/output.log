@@ -1,2 +1,0 @@
-/home/phionah/Desktop/events/.venv/lib/python3.14/site-packages/africastalking/Whatsapp.py:35: UserWarning: Sandbox is currently not available for the Whatsapp service.
-  warnings.warn(

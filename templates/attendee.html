@@ -5,98 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bagga Whisper - Attendee Portal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f9; font-family: system-ui, -apple-system, sans-serif; }
-        .record-card { max-width: 420px; margin: 30px auto; border-radius: 16px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        body { background-color: #f1f5f9; color: #1e293b; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .record-card { max-width: 620px; margin: 30px auto; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
         .mic-btn { width: 100px; height: 100px; border-radius: 50%; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.2s ease; }
         .mic-btn.recording { animation: pulse 1.2s infinite; background-color: #dc3545 !important; color: white !important; }
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); } 70% { transform: scale(1.08); box-shadow: 0 0 0 18px rgba(220, 53, 69, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
+        .portal-nav { max-width: 1100px; margin: auto; padding: 22px 24px; display: flex; justify-content: space-between; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .portal-nav a { color: #1d4ed8; font-size: 14px; font-weight: 700; text-decoration: none; }
+        .portal-brand { color: #0f172a; font-weight: 800; font-size: 24px; }
+        header { background: #fff; border-bottom: 1px solid #e2e8f0; }
+        .btn-primary { background: #2563eb; border-color: #2563eb; border-radius: 12px; }
+        .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+        .form-control { border-color: #cbd5e1; border-radius: 12px; padding: 14px; }
+        .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+        .privacy-badge { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        #feedbackStatus { min-height: 24px; margin-top: 16px; color: #1e40af; }
     </style>
 </head>
 <body>
+    <header><nav class="portal-nav" aria-label="Main navigation"><span class="portal-brand">Bagga</span><div class="d-flex gap-4"><a href="/">Home</a><a href="/dashboard">Feedback dashboard</a></div></nav></header>
     <div class="container px-3">
         <div class="card record-card p-4 text-center">
             <div class="mb-3">
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-semibold">
-                    🔒 100% Anonymous Feedback
+                <span class="badge privacy-badge px-3 py-2 rounded-pill fw-semibold">
+                    Anonymous feedback
                 </span>
             </div>
             <h3 class="fw-bold mb-1">Bagga Whisper</h3>
-            <p class="text-muted small mb-3">Lazy to type? Record your voice note or type below.</p>
-
-            <div class="my-3">
-                <button id="recordBtn" class="btn btn-outline-danger mic-btn shadow-sm">
-                    🎙️
-                </button>
-                <div id="recordStatus" class="mt-3 text-muted fw-semibold small">Tap button to start recording</div>
-            </div>
-
-            <hr class="my-4">
+            <p class="text-muted small mb-3">Share a concern, suggestion or a moment you enjoyed. Your note helps the event team.</p>
 
             <form id="textForm" class="text-start">
-                <label class="form-label fw-semibold small text-secondary">OR TYPE TEXT NOTE</label>
-                <textarea id="textNote" class="form-control mb-3" rows="3" placeholder="e.g. The speakers near stage left are cracking..."></textarea>
+                <label for="textNote" class="form-label fw-semibold small text-secondary">YOUR FEEDBACK</label>
+                <textarea id="textNote" required class="form-control mb-3" rows="3" placeholder="e.g. The speakers near stage left are cracking..."></textarea>
                 <button type="submit" class="btn btn-primary w-100 fw-bold py-2">Submit Feedback</button>
             </form>
+            <p id="feedbackStatus" role="status" aria-live="polite"></p>
         </div>
     </div>
 
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-
-        const recordBtn = document.getElementById('recordBtn');
-        const recordStatus = document.getElementById('recordStatus');
-
-        recordBtn.addEventListener('click', async () => {
-            if (!isRecording) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = async () => {
-                        recordStatus.innerText = "Analyzing audio note with Gemini AI...";
-                        
-                        await fetch('/api/voice_web', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ note: "Audio Issue: Stage speakers are cracking and sound is too loud in front rows" })
-                        });
-
-                        recordStatus.innerText = "✅ Voice note logged & processed anonymously!";
-                        recordBtn.classList.remove('recording');
-                        setTimeout(() => { recordStatus.innerText = "Tap button to start recording"; }, 3000);
-                    };
-
-                    mediaRecorder.start();
-                    isRecording = true;
-                    recordBtn.classList.add('recording');
-                    recordStatus.innerText = "🔴 Recording... Tap again to stop";
-                } catch (err) {
-                    alert("Microphone access is required.");
-                }
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-            }
-        });
-
-        document.getElementById('textForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const note = document.getElementById('textNote').value.trim();
-            if (!note) return;
-
-            await fetch('/api/voice_web', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ note: note })
-            });
-
-            document.getElementById('textNote').value = '';
-            alert("Feedback submitted successfully!");
+        document.getElementById('textForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const input = document.getElementById('textNote');
+            const status = document.getElementById('feedbackStatus');
+            const button = event.currentTarget.querySelector('button');
+            const note = input.value.trim();
+            if (!note) { status.textContent = 'Please enter your feedback.'; return; }
+            button.disabled = true;
+            status.textContent = 'Saving your feedback…';
+            try {
+                const response = await fetch('/api/voice_web', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({note})
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || data.message || 'Feedback could not be saved. Please try again.');
+                status.textContent = data.message || 'Thank you. Your feedback was saved.';
+                input.value = '';
+            } catch (error) {
+                status.textContent = error.message || 'Could not connect. Please try again.';
+            } finally { button.disabled = false; }
         });
     </script>
 </body>

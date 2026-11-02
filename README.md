@@ -1,14 +1,14 @@
-# 🎙️ Bagga Whisper
+#  Bagga 
 
 > **Offline-First, Anonymous Event Attendee Feedback & Real-Time Intelligence Platform**
 
-Bagga Whisper enables conference and event organizers to collect real-time feedback from attendees without requiring an internet connection or smartphone apps. Powered by **Africa's Talking USSD/Voice APIs** and **Google Gemini AI**, it routes complaints, praises, and operational alerts straight to an organizer command dashboard while guaranteeing 100% attendee anonymity through cryptographic phone number hashing.
+Bagga  enables conference and event organizers to collect real-time feedback from attendees without requiring an internet connection or smartphone apps. Powered by **Africa's Talking USSD/Voice APIs** and **Google Gemini AI**, it routes complaints, praises, and operational alerts straight to an organizer command dashboard while guaranteeing 100% attendee anonymity through cryptographic phone number hashing.
 
 ---
 
 ## 🚀 Key Features
 
-* **Zero-Internet Accessibility:** Attendees participate via simple USSD codes (`*384*...#`) or Voice hotline calls.
+* **Zero-Internet Accessibility:** Attendees participate via simple USSD codes (`*384*55658#`) or Voice hotline calls.
 * **Cryptographic Anonymity:** Phone numbers are hashed using MD5 (`Attendee#XXXXX`) at the gateway layer, preserving privacy while enabling airtime rewards.
 * **Gemini AI Classification:** Raw feedback notes are analyzed instantly for operational category (Audio, Facilities, Schedule) and urgency level (High, Medium, Low).
 * **Organizer Command Center:** Real-time web dashboard displaying live stream metrics, active channel status, and high-urgency alerts.
@@ -19,7 +19,7 @@ Bagga Whisper enables conference and event organizers to collect real-time feedb
 ## 🛠️ Tech Stack
 
 * **Backend:** Python 3, Flask
-* **Database:** SQLite3
+* **Database:** MongoDB
 * **Telephony Gateway:** Africa's Talking SDK (USSD, Voice, Airtime)
 * **AI Intelligence:** Google Gemini API (`google-generativeai`)
 * **Frontend:** HTML5, Bootstrap 5, Modern JavaScript
@@ -38,8 +38,8 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment Variables
-Create a `.env` file in the root directory:
-```env
+Create `backend/.env` (loaded automatically from any working directory):
+env
 AT_USERNAME=sandbox
 AT_API_KEY=your_africas_talking_api_key
 GEMINI_API_KEY=your_google_gemini_api_key
@@ -48,17 +48,21 @@ BAGGA_EVENT_DATE=2026-10-15
 BAGGA_EVENT_VENUE=Your venue
 BAGGA_EVENT_LOCATION=City, Country
 BAGGA_EVENT_ORGANIZER=Organizer name
-```
+
 
 Event details can be entered and saved from the dashboard; the saved values appear in the PDF report. Use **Start New Event** before a subsequent event to open a blank details form and start a separate feedback/report view. Previous event details and feedback are preserved. The `BAGGA_EVENT_*` values can prefill the form before the first save. Use `YYYY-MM-DD` for `BAGGA_EVENT_DATE`. Missing details are shown as "Not provided"; the event date is separate from the report generation timestamp.
+MONGO_URI=your_mongodb_connection_string
+AT_SMS_FEEDBACK_NUMBER=your_inbound_sms_number
+AT_USSD_CODE=*384*your_service_code#
+```
+
+Configure Africa's Talking to send incoming SMS to `https://your-public-host/api/sms` and USSD sessions to `https://your-public-host/api/ussd`. The public host must be reachable by Africa's Talking. USSD option 6 returns the saved event details and schedule; incoming SMS feedback is anonymized and appears in the feedback dashboard.
 
 ### 3. Run Application
 ```bash
 python3 app.py
-```
-Access the organizer dashboard at `http://127.0.0.1:5000`.
+`
 
----
 
 ## 🧪 Simulation & Testing
 
@@ -71,3 +75,4 @@ curl -X POST http://127.0.0.1:5000/api/ussd \
   -d "text=4*The room temperature is way too hot"
 ```
 
+Live Demo https://bagga.onrender.com
