@@ -43,7 +43,14 @@ Create a `.env` file in the root directory:
 AT_USERNAME=sandbox
 AT_API_KEY=your_africas_talking_api_key
 GEMINI_API_KEY=your_google_gemini_api_key
+BAGGA_EVENT_NAME=Your event name
+BAGGA_EVENT_DATE=2026-10-15
+BAGGA_EVENT_VENUE=Your venue
+BAGGA_EVENT_LOCATION=City, Country
+BAGGA_EVENT_ORGANIZER=Organizer name
 ```
+
+Event details can be entered and saved from the dashboard; the saved values appear in the PDF report. Use **Start New Event** before a subsequent event to open a blank details form and start a separate feedback/report view. Previous event details and feedback are preserved. The `BAGGA_EVENT_*` values can prefill the form before the first save. Use `YYYY-MM-DD` for `BAGGA_EVENT_DATE`. Missing details are shown as "Not provided"; the event date is separate from the report generation timestamp.
 
 ### 3. Run Application
 ```bash

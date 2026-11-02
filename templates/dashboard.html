@@ -1,27 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bagga Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
         .glass-card {
             background: #ffffff;
             box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 0 10px 0 rgba(15, 23, 42, 0.02);
         }
     </style>
 </head>
+
 <body class="bg-slate-100 text-slate-800 min-h-screen antialiased">
 
     <!-- Header Navigation -->
     <header class="border-b border-slate-200 bg-white/90 sticky top-0 backdrop-blur-md z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center space-x-4">
-                <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20">
+                <div
+                    class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20">
                     <div class="w-full h-full bg-blue-900 rounded-[14px] flex items-center justify-center">
                         <i class="fa-solid fa-tower-broadcast text-cyan-400 text-lg"></i>
                     </div>
@@ -29,11 +36,14 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="text-xl font-black tracking-tight text-slate-900">Bagga</h1>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> <span id="lbl_live_engine">LIVE ENGINE</span>
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> <span
+                                id="lbl_live_engine">LIVE ENGINE</span>
                         </span>
                     </div>
-                    <p id="lbl_subhead" class="text-xs text-slate-500 font-medium">Real-Time USSD Telemetry & Operations Intelligence</p>
+                    <p id="lbl_subhead" class="text-xs text-slate-500 font-medium">Real-Time USSD Telemetry & Operations
+                        Intelligence</p>
                 </div>
             </div>
 
@@ -41,97 +51,185 @@
             <div class="flex items-center gap-3">
                 <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
                     <i class="fa-solid fa-globe text-blue-600 text-xs"></i>
-                    <select id="dashLangSelect" onchange="switchDashboardLanguage(this.value)" class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer">
+                    <select id="dashLangSelect" onchange="switchDashboardLanguage(this.value)"
+                        class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer">
                         <option value="en">English (US/UK)</option>
                         <option value="lg">Luganda (UG)</option>
                         <option value="sw">Kiswahili (KE/TZ)</option>
                     </select>
                 </div>
 
-                <a href="/report/pdf" target="_blank" class="px-3.5 py-2 text-xs font-extrabold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition shadow-sm flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-pdf text-rose-600"></i> <span id="lbl_export_btn">Export Post-Event Report (PDF)</span>
+                <a href="/report/pdf" target="_blank"
+                    class="px-3.5 py-2 text-xs font-extrabold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-pdf text-rose-600"></i> <span id="lbl_export_btn">Export Post-Event
+                        Report (PDF)</span>
                 </a>
 
-                <a href="/" class="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition duration-200 shadow-sm">
-                    <i class="fa-solid fa-arrows-rotate text-blue-600 group-hover:rotate-180 transition-transform duration-500"></i> <span id="lbl_refresh_btn">Refresh</span>
-                </a>
+                <button type="submit" form="newEventForm"
+                    class="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition duration-200 shadow-sm">
+                    <i
+                        class="fa-solid fa-arrows-rotate text-blue-600 group-hover:rotate-180 transition-transform duration-500"></i>
+                    <span id="lbl_refresh_btn">Refresh</span>
+                </button>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        
+
         <!-- Metrics Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            
+
             <div class="glass-card rounded-2xl border border-slate-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p id="lbl_stat_notes" class="text-xs font-bold uppercase tracking-wider text-slate-500">Total USSD Notes</p>
+                        <p id="lbl_stat_notes" class="text-xs font-bold uppercase tracking-wider text-slate-500">Total
+                            USSD Notes</p>
                         <h3 class="text-3xl font-black text-slate-900 mt-2">{{ stats.total_feedback }}</h3>
                     </div>
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
                         <i class="fa-solid fa-comments"></i>
                     </div>
                 </div>
-                <p class="mt-3 text-[11px] text-slate-500 font-semibold"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i> Live via Africa's Talking</p>
+                <p class="mt-3 text-[11px] text-slate-500 font-semibold"><i
+                        class="fa-solid fa-bolt text-amber-500 mr-1"></i> Live via Africa's Talking</p>
             </div>
 
             <div class="glass-card rounded-2xl border border-slate-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p id="lbl_stat_urgency" class="text-xs font-bold uppercase tracking-wider text-slate-500">High Urgency Alerts</p>
+                        <p id="lbl_stat_urgency" class="text-xs font-bold uppercase tracking-wider text-slate-500">High
+                            Urgency Alerts</p>
                         <h3 class="text-3xl font-black text-amber-600 mt-2">{{ stats.high_urgency }}</h3>
                     </div>
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                 </div>
-                <p id="lbl_stat_triage" class="mt-3 text-[11px] text-slate-500 font-semibold"><span class="w-2 h-2 rounded-full bg-amber-500 inline-block mr-1"></span> Automated Triage</p>
+                <p id="lbl_stat_triage" class="mt-3 text-[11px] text-slate-500 font-semibold"><span
+                        class="w-2 h-2 rounded-full bg-amber-500 inline-block mr-1"></span> Automated Triage</p>
             </div>
 
             <div class="glass-card rounded-2xl border border-slate-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p id="lbl_stat_health" class="text-xs font-bold uppercase tracking-wider text-slate-500">Venue Health Index</p>
-                        <h3 class="text-3xl font-black text-emerald-600 mt-2">{{ stats.uptime_rate }}%</h3>
+                        <p id="lbl_stat_health" class="text-xs font-bold uppercase tracking-wider text-slate-500">Not
+                            flagged high urgency</p>
+                        <h3 class="text-3xl font-black text-emerald-600 mt-2">{{ stats.non_high_urgency_rate }}%</h3>
                     </div>
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
                         <i class="fa-solid fa-shield-halved"></i>
                     </div>
                 </div>
-                <p id="lbl_stat_b2b" class="mt-3 text-[11px] text-slate-500 font-semibold"><i class="fa-solid fa-check text-emerald-500 mr-1"></i> B2B Service Level Metric</p>
+                <p id="lbl_stat_b2b" class="mt-3 text-[11px] text-slate-500 font-semibold"><i
+                        class="fa-solid fa-check text-emerald-500 mr-1"></i> Share of all submissions</p>
             </div>
 
             <div class="glass-card rounded-2xl border border-slate-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p id="lbl_stat_audience" class="text-xs font-bold uppercase tracking-wider text-slate-500">Captured Audience</p>
+                        <p id="lbl_stat_audience" class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Captured Audience</p>
                         <h3 class="text-3xl font-black text-indigo-600 mt-2">{{ attendees|length }}</h3>
                     </div>
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                         <i class="fa-solid fa-users"></i>
                     </div>
                 </div>
-                <p id="lbl_stat_leads" class="mt-3 text-[11px] text-slate-500 font-semibold"><i class="fa-solid fa-address-book text-indigo-500 mr-1"></i> Auto-saved Phone Leads</p>
+                <p id="lbl_stat_leads" class="mt-3 text-[11px] text-slate-500 font-semibold"><i
+                        class="fa-solid fa-address-book text-indigo-500 mr-1"></i> Auto-saved Phone Leads</p>
             </div>
 
         </div>
 
+        {% if request.args.get('event_status') == 'saved' %}
+        <p role="status"
+            class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800">
+            Event details saved. They will appear in the PDF report.
+        </p>
+        {% elif request.args.get('event_status') == 'incomplete' %}
+        <p role="alert"
+            class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-800">
+            Complete all event details before saving.
+        </p>
+        {% elif request.args.get('event_status') == 'new' %}
+        <p role="status"
+            class="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-bold text-blue-800">
+            New event started. Enter its details below; previous event records are preserved.
+        </p>
+        {% endif %}
+
+        <section class="glass-card rounded-2xl border border-slate-200 p-6">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-calendar-days text-blue-600"></i>
+                <h2 class="text-sm font-black text-slate-900">Event Details</h2>
+            </div>
+            <form action="/api/organizer/event-details" method="POST"
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                <label class="block text-[11px] font-bold text-slate-600">
+                    Event name
+                    <input type="text" name="event_name" value="{{ event_details.event_name }}" maxlength="160" required
+                        class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none">
+                </label>
+                <label class="block text-[11px] font-bold text-slate-600">
+                    Event date
+                    <input type="date" name="event_date" value="{{ event_details.event_date }}" required
+                        class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none">
+                </label>
+                <label class="block text-[11px] font-bold text-slate-600">
+                    Venue
+                    <input type="text" name="venue" value="{{ event_details.venue }}" maxlength="160" required
+                        class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none">
+                </label>
+                <label class="block text-[11px] font-bold text-slate-600">
+                    City / location
+                    <input type="text" name="location" value="{{ event_details.location }}" maxlength="160" required
+                        class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none">
+                </label>
+                <label class="block text-[11px] font-bold text-slate-600">
+                    Organizer
+                    <input type="text" name="organizer" value="{{ event_details.organizer }}" maxlength="160" required
+                        class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none">
+                </label>
+                <button type="submit"
+                    class="sm:col-span-2 lg:col-span-5 justify-self-start inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-xs font-extrabold text-white hover:bg-blue-800">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Event Details
+                </button>
+            </form>
+            <form id="newEventForm" action="/api/organizer/events/new" method="POST" class="mt-4"
+                onsubmit="return confirmNewEvent();">
+                <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-plus"></i> Start New Event
+                </button>
+            </form>
+        </section>
+
         <!-- Broadcast SMS Banner -->
-        <div class="rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-6 shadow-xl border border-blue-900">
+        <div
+            class="rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-6 shadow-xl border border-blue-900">
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-paper-plane text-amber-400"></i>
-                        <h3 id="lbl_broadcast_title" class="font-extrabold text-lg">Broadcast Appreciation SMS Blast</h3>
+                        <h3 id="lbl_broadcast_title" class="font-extrabold text-lg">Broadcast Appreciation SMS Blast
+                        </h3>
                     </div>
-                    <p id="lbl_broadcast_sub" class="text-xs text-slate-300 mt-1">Send a direct message to all {{ attendees|length }} captured phone numbers.</p>
+                    <p id="lbl_broadcast_sub" class="text-xs text-slate-300 mt-1">Send a direct message to all {{
+                        attendees|length }} captured phone numbers.</p>
                 </div>
 
-                <form action="/api/organizer/thankyou" method="POST" class="w-full md:w-auto flex flex-col sm:flex-row gap-3">
-                    <input type="text" id="input_broadcast_msg" name="thank_you_message" value="Thank you for attending Bagga! Your live feedback improved our event." class="px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-cyan-400 w-full sm:w-80" required>
-                    <button type="submit" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-lg transition active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+                <form action="/api/organizer/thankyou" method="POST"
+                    class="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="input_broadcast_msg" name="thank_you_message"
+                        class="px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-cyan-400 w-full sm:w-80"
+                        required>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-lg transition active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
                         <i class="fa-solid fa-paper-plane"></i> <span id="lbl_send_blast_btn">Send SMS Blast</span>
                     </button>
                 </form>
@@ -140,35 +238,45 @@
 
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            
+
             <!-- Left Panel: Audience Directory -->
             <div class="lg:col-span-1 space-y-6">
-                <div class="glass-card border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between">
+                <div
+                    class="glass-card border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
-                            <h3 id="lbl_audience_title" class="font-black text-slate-900 text-sm flex items-center gap-2">
+                            <h3 id="lbl_audience_title"
+                                class="font-black text-slate-900 text-sm flex items-center gap-2">
                                 <i class="fa-solid fa-address-book text-blue-600"></i> Audience Directory
                             </h3>
-                            <span id="badge_active_att" class="text-[10px] font-extrabold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                            <span id="badge_active_att"
+                                class="text-[10px] font-extrabold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
                                 {{ attendees|length }} Active
                             </span>
                         </div>
 
                         <div class="space-y-3">
                             {% for att in attendees %}
-                            <div class="attendee-card p-4 rounded-xl bg-slate-50 border border-slate-200 {% if loop.index > 2 %}hidden{% endif %}">
+                            <div
+                                class="attendee-card p-4 rounded-xl bg-slate-50 border border-slate-200 {% if loop.index > 2 %}hidden{% endif %}">
                                 <div class="flex items-center justify-between mb-1">
-                                    <span class="text-xs font-black text-blue-700">{{ att.anon_id or ("Attendee#" ~ att.phone_number[-4:]) }}</span>
-                                    <span class="text-[10px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold border border-slate-200">
+                                    <span class="text-xs font-black text-blue-700">{{ att.anon_id or ("Attendee#" ~
+                                        att.phone_number[-4:]) }}</span>
+                                    <span
+                                        class="text-[10px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold border border-slate-200">
                                         {{ att.feedback_count }} <span class="lbl_notes_suffix">notes</span>
                                     </span>
                                 </div>
                                 <p class="text-xs font-mono text-slate-800 font-bold mb-3">{{ att.phone_number }}</p>
-                                
+
                                 <form action="/api/organizer/reply" method="POST" class="flex gap-2">
                                     <input type="hidden" name="phone_number" value="{{ att.phone_number }}">
-                                    <input type="text" id="reply_input_{{ att.phone_number|replace('+', '') }}" name="message" placeholder="Direct SMS reply..." class="sms-reply-input w-full px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600" required>
-                                    <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg transition active:scale-95">SMS</button>
+                                    <input type="text" id="reply_input_{{ att.phone_number|replace('+', '') }}"
+                                        name="message" placeholder="Direct SMS reply..."
+                                        class="sms-reply-input w-full px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600"
+                                        required>
+                                    <button type="submit"
+                                        class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg transition active:scale-95">SMS</button>
                                 </form>
                             </div>
                             {% else %}
@@ -179,8 +287,9 @@
 
                     {% if attendees|length > 2 %}
                     <div class="p-3 bg-slate-50 border-t border-slate-200 text-center">
-                        <button id="toggleAttBtn" onclick="toggleAttendees()" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-blue-700 bg-white hover:bg-blue-50 px-4 py-1.5 border border-blue-200 rounded-xl transition shadow-sm">
-                            <i id="toggleAttIcon" class="fa-solid fa-chevron-down text-[10px]"></i> 
+                        <button id="toggleAttBtn" onclick="toggleAttendees()"
+                            class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-blue-700 bg-white hover:bg-blue-50 px-4 py-1.5 border border-blue-200 rounded-xl transition shadow-sm">
+                            <i id="toggleAttIcon" class="fa-solid fa-chevron-down text-[10px]"></i>
                             <span id="toggleAttText">Show All Attendees ({{ attendees|length }})</span>
                         </button>
                     </div>
@@ -196,9 +305,11 @@
                             <h3 id="lbl_feed_title" class="font-black text-slate-900 text-base flex items-center gap-2">
                                 <i class="fa-solid fa-comments text-blue-600"></i> Live Feedback & Triage
                             </h3>
-                            <p id="lbl_feed_sub" class="text-xs text-slate-500 mt-0.5">Real-time USSD input parsed with sentiment engine</p>
+                            <p id="lbl_feed_sub" class="text-xs text-slate-500 mt-0.5">Real-time USSD input parsed with
+                                sentiment engine</p>
                         </div>
-                        <span id="feedCounter" class="text-xs font-extrabold px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                        <span id="feedCounter"
+                            class="text-xs font-extrabold px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
                             Showing {{ [3, feedbacks|length]|min }} of {{ feedbacks|length }}
                         </span>
                     </div>
@@ -206,7 +317,8 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                <tr
+                                    class="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-500">
                                     <th id="th_attendee" class="py-3.5 px-4">Attendee</th>
                                     <th id="th_category" class="py-3.5 px-4">Category</th>
                                     <th id="th_raw" class="py-3.5 px-4">Raw / Translation</th>
@@ -216,46 +328,81 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-xs font-medium">
                                 {% for fb in feedbacks %}
-                                <tr class="feedback-row hover:bg-blue-50/30 transition {% if loop.index > 3 %}hidden{% endif %}">
+                                <tr
+                                    class="feedback-row hover:bg-blue-50/30 transition {% if loop.index > 3 %}hidden{% endif %}">
                                     <td class="py-4 px-4 font-black text-blue-700">
                                         <span class="lbl_attendee_name">{{ fb.anon_id or "Attendee" }}</span>
-                                        <div class="text-[10px] font-mono text-slate-400 uppercase">{{ fb.language or "en" }}</div>
+                                        <div class="text-[10px] font-mono text-slate-400 uppercase">
+                                            {% if fb.language == 'lg' %}Luganda{% elif fb.language == 'sw' %}Kiswahili{%
+                                            else %}English{% endif %}
+                                        </div>
                                     </td>
                                     <td class="py-4 px-4">
-                                        <span class="cat-badge px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-700 border border-slate-200" data-cat="{{ fb.category }}">
+                                        <span
+                                            class="cat-badge px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-700 border border-slate-200"
+                                            data-cat="{{ fb.category }}">
                                             {{ fb.category }}
                                         </span>
                                     </td>
                                     <td class="py-4 px-4 max-w-xs leading-relaxed">
                                         <div class="text-slate-900 font-bold">"{{ fb.raw_text }}"</div>
-                                        {% if fb.translated_text and fb.translated_text != fb.raw_text %}
-                                            <div class="text-[11px] text-blue-700 italic mt-0.5"><i class="fa-solid fa-language"></i> EN: {{ fb.translated_text }}</div>
+                                        {% if fb.language in ['lg', 'sw'] %}
+                                        <div class="translation-area mt-1">
+                                            <div
+                                                class="translation-copy text-[11px] text-blue-800 italic {% if not fb.translated_text or fb.translated_text == fb.raw_text %}hidden{% endif %}">
+                                                <i class="fa-solid fa-language"></i> EN (machine translation; check
+                                                against
+                                                original):
+                                                <span class="translation-text">{{ fb.translated_text }}</span>
+                                            </div>
+                                            {% if not fb.translated_text or fb.translated_text == fb.raw_text %}
+                                            <button type="button" data-feedback-id="{{ fb.id }}"
+                                                class="translate-button inline-flex items-center gap-1 mt-1 px-2 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded">
+                                                <i class="fa-solid fa-language"></i> Translate to English
+                                            </button>
+                                            {% endif %}
+                                            <p class="translation-status text-[10px] text-rose-700 mt-1" role="status"
+                                                aria-live="polite"></p>
+                                        </div>
+                                        {% elif fb.translated_text and fb.translated_text != fb.raw_text %}
+                                        <div class="text-[11px] text-blue-800 italic mt-0.5"><i
+                                                class="fa-solid fa-language"></i> EN: {{ fb.translated_text }}</div>
                                         {% endif %}
                                     </td>
                                     <td class="py-4 px-4">
                                         {% if fb.urgency == 'HIGH' %}
-                                            <span class="urgency-high inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> HIGH
-                                            </span>
+                                        <span
+                                            class="urgency-high inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                                            HIGH
+                                        </span>
                                         {% else %}
-                                            <span class="urgency-normal px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500">NORMAL</span>
+                                        <span
+                                            class="urgency-normal px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500">NORMAL</span>
                                         {% endif %}
                                     </td>
                                     <td class="py-4 px-4 text-right space-y-1">
-                                        <button onclick="autofillReply('{{ fb.phone_number|replace('+', '') }}', '{{ (fb.suggested_reply or 'Thank you for your feedback! Our team is addressing this now.')|escape }}')" class="btn-ai-reply px-2 py-1 text-[10px] font-extrabold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition flex items-center gap-1 ml-auto">
-                                            <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> <span class="lbl_ai_reply">AI Reply</span>
+                                        <button data-phone="{{ fb.phone_number|replace('+', '')|e }}"
+                                            data-reply="{{ (fb.suggested_reply or 'Thank you for your feedback! Our team is addressing this now.')|e }}"
+                                            class="btn-ai-reply px-2 py-1 text-[10px] font-extrabold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition flex items-center gap-1 ml-auto">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> <span
+                                                class="lbl_ai_reply">AI Reply</span>
                                         </button>
 
-                                        <form action="/api/organizer/delete/{{ fb.id }}" method="POST" onsubmit="return confirm('Clear this note?');">
-                                            <button type="submit" class="btn-clear px-2 py-1 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded transition flex items-center gap-1 ml-auto">
-                                                <i class="fa-solid fa-trash-can"></i> <span class="lbl_clear">Clear</span>
+                                        <form action="/api/organizer/delete/{{ fb.id }}" method="POST"
+                                            onsubmit="return confirm('Clear this note?');">
+                                            <button type="submit"
+                                                class="btn-clear px-2 py-1 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded transition flex items-center gap-1 ml-auto">
+                                                <i class="fa-solid fa-trash-can"></i> <span
+                                                    class="lbl_clear">Clear</span>
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-12 text-slate-400 text-xs">No feedback submitted yet.</td>
+                                    <td colspan="5" class="text-center py-12 text-slate-400 text-xs">No feedback
+                                        submitted yet.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -264,8 +411,9 @@
 
                     {% if feedbacks|length > 3 %}
                     <div class="p-4 bg-slate-50 border-t border-slate-200 text-center">
-                        <button id="toggleFeedBtn" onclick="toggleFeed()" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-extrabold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-xl transition shadow-sm">
-                            <i id="toggleFeedIcon" class="fa-solid fa-chevron-down"></i> 
+                        <button id="toggleFeedBtn" onclick="toggleFeed()"
+                            class="inline-flex items-center gap-2 px-5 py-2 text-xs font-extrabold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-xl transition shadow-sm">
+                            <i id="toggleFeedIcon" class="fa-solid fa-chevron-down"></i>
                             <span id="toggleFeedText">Show All Submissions ({{ feedbacks|length }})</span>
                         </button>
                     </div>
@@ -288,8 +436,8 @@
                 statNotes: "Total USSD Notes",
                 statUrgency: "High Urgency Alerts",
                 statTriage: "Automated Triage",
-                statHealth: "Venue Health Index",
-                statB2b: "B2B Service Level Metric",
+                statHealth: "Not flagged high urgency",
+                statB2b: "Share of all submissions",
                 statAudience: "Captured Audience",
                 statLeads: "Auto-saved Phone Leads",
                 broadcastTitle: "Broadcast Appreciation SMS Blast",
@@ -333,8 +481,8 @@
                 statNotes: "Omuwendo gw'Ebirowoozo",
                 statUrgency: "Amawulire ag'Amangu",
                 statTriage: "Okunsunsula okw'Ekyuma",
-                statHealth: "Kipimo ky'Obulamu bw'Ekisaawe",
-                statB2b: "Omutindo gw'Abaweereza mu B2B",
+                statHealth: "Ebitasunsuddwa nga bya mangu",
+                statB2b: "Ebitundu ku birowoozo byonna",
                 statAudience: "Abalabi Abakwatiddwa",
                 statLeads: "Enamba z'Essimu ezeeterekedde",
                 broadcastTitle: "Olubu lw'Obubaka bw'Okwebaza",
@@ -378,8 +526,8 @@
                 statNotes: "Jumla ya Ujumbe za USSD",
                 statUrgency: "Tahadhari za Dharura",
                 statTriage: "Uchambuzi wa Kiotomatiki",
-                statHealth: "Kiwango cha Afya ya Ukumbi",
-                statB2b: "Kipimo cha Huduma ya B2B",
+                statHealth: "Maoni yasiyo ya dharura",
+                statB2b: "Sehemu ya maoni yote",
                 statAudience: "Watazamaji Walionaswa",
                 statLeads: "Nambari za Simu Zilizohifadhiwa",
                 broadcastTitle: "Ujumbe Mfupi wa Tangazo la Shukrani",
@@ -419,7 +567,7 @@
 
         function switchDashboardLanguage(lang) {
             const dict = DASH_TRANSLATIONS[lang] || DASH_TRANSLATIONS.en;
-            
+
             // Header
             document.getElementById('lbl_live_engine').innerText = dict.liveEngine;
             document.getElementById('lbl_subhead').innerText = dict.subhead;
@@ -438,16 +586,16 @@
             // Broadcast
             document.getElementById('lbl_broadcast_title').innerText = dict.broadcastTitle;
             document.getElementById('lbl_broadcast_sub').innerText = dict.broadcastSub;
-            document.getElementById('input_broadcast_msg').value = dict.broadcastPlaceholder;
+            document.getElementById('input_broadcast_msg').placeholder = dict.broadcastPlaceholder;
             document.getElementById('lbl_send_blast_btn').innerText = dict.sendBlastBtn;
 
             // Audience Section
             document.getElementById('lbl_audience_title').innerHTML = `<i class="fa-solid fa-address-book text-blue-600"></i> ${dict.audienceTitle}`;
             document.getElementById('badge_active_att').innerText = dict.activeBadge;
-            
+
             document.querySelectorAll('.lbl_notes_suffix').forEach(el => el.innerText = dict.notesSuffix);
             document.querySelectorAll('.sms-reply-input').forEach(el => el.placeholder = dict.smsPlaceholder);
-            
+
             const toggleAttBtn = document.getElementById('toggleAttText');
             if (toggleAttBtn) {
                 toggleAttBtn.innerText = isShowingAllAtt ? dict.showLessAtt : dict.showAllAtt;
@@ -502,7 +650,21 @@
             const savedLang = localStorage.getItem('bagga_dash_lang') || 'en';
             document.getElementById('dashLangSelect').value = savedLang;
             switchDashboardLanguage(savedLang);
+
+            if (sessionStorage.getItem('bagga_clear_dashboard_drafts')) {
+                sessionStorage.removeItem('bagga_clear_dashboard_drafts');
+                document.getElementById('input_broadcast_msg').value = '';
+                document.querySelectorAll('.sms-reply-input').forEach(input => input.value = '');
+            }
         });
+
+        function confirmNewEvent() {
+            if (!confirm('Start a new event? The dashboard and report will switch to a blank event. Previous event details and feedback will be preserved.')) {
+                return false;
+            }
+            sessionStorage.setItem('bagga_clear_dashboard_drafts', '1');
+            return true;
+        }
 
         let isShowingAllFeed = false;
         function toggleFeed() {
@@ -572,6 +734,49 @@
                 setTimeout(() => inputField.classList.remove('ring-2', 'ring-blue-500'), 1500);
             }
         }
+
+        document.addEventListener('click', (event) => {
+            if (!(event.target instanceof Element)) return;
+
+            const translateButton = event.target.closest('.translate-button');
+            if (translateButton) {
+                translateFeedback(translateButton.dataset.feedbackId, translateButton);
+                return;
+            }
+
+            const replyButton = event.target.closest('.btn-ai-reply');
+            if (replyButton) {
+                autofillReply(replyButton.dataset.phone, replyButton.dataset.reply);
+            }
+        });
+
+        async function translateFeedback(feedbackId, button) {
+            const area = button.closest('.translation-area');
+            const status = area.querySelector('.translation-status');
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Translating…';
+            status.textContent = '';
+
+            try {
+                const response = await fetch(`/api/feedback/${feedbackId}/translate`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Translation failed. Please try again.');
+                }
+
+                area.querySelector('.translation-text').textContent = result.translated_text;
+                area.querySelector('.translation-copy').classList.remove('hidden');
+                button.remove();
+            } catch (error) {
+                status.textContent = error.message;
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-language"></i> Translate to English';
+            }
+        }
     </script>
 </body>
+
 </html>
