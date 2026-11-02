@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bagga B2B Executive Venue Performance Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #142b32;
+            --muted: #5d7074;
+            --line: #d7e0df;
+            --paper: #ffffff;
+            --wash: #f3f7f5;
+            --green: #176b55;
+            --green-wash: #e9f4ee;
+            --amber: #93600a;
+            --amber-wash: #fff4d9;
+            --red: #9b3931;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 auto;
+            padding: 34px 38px;
+            max-width: 1040px;
+            background: var(--paper);
+            color: var(--ink);
+            font: 13px/1.5 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 14px 18px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            background: var(--ink);
+            color: white;
+        }
+
+        .toolbar strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .toolbar p {
+            margin: 3px 0 0;
+            color: #d0ddda;
+            font-size: 11px;
+        }
+
+        .print-button {
+            border: 0;
+            border-radius: 4px;
+            padding: 10px 14px;
+            background: #d7eddf;
+            color: #143c30;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .masthead {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--ink);
+        }
+
+        .brand {
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+        }
+
+        h1 {
+            margin: 6px 0 4px;
+            font: 700 27px/1.15 Georgia, 'Times New Roman', serif;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .report-meta {
+            min-width: 220px;
+            text-align: right;
+        }
+
+        .meta-label {
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+        }
+
+        .meta-value {
+            margin: 2px 0 9px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 22px 0 18px;
+        }
+
+        .metric {
+            min-height: 82px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-top: 3px solid var(--green);
+            background: var(--wash);
+        }
+
+        .metric.alert {
+            border-top-color: var(--amber);
+            background: var(--amber-wash);
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .55px;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            margin-top: 5px;
+            font: 700 24px/1 Georgia, 'Times New Roman', serif;
+        }
+
+        .scope {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 6px 20px;
+            margin-bottom: 26px;
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            margin: 0 0 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h2 {
+            margin: 0;
+            font: 700 16px Georgia, 'Times New Roman', serif;
+        }
+
+        .section-note {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .translation-note {
+            margin: 0 0 10px;
+            padding: 8px 10px;
+            border-left: 3px solid var(--green);
+            background: var(--green-wash);
+            color: #34554a;
+            font-size: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+            font-size: 12px;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        th {
+            padding: 12px;
+            background: #f1f5f9;
+            color: #475569;
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8faf9;
+        }
+
+        .attendee {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .source-language {
+            display: block;
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .original {
+            color: var(--ink);
+            white-space: pre-wrap;
+        }
+
+        .translation {
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px dotted var(--line);
+            color: #315a7d;
+            white-space: pre-wrap;
+        }
+
+        .translation-label {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--muted);
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .unavailable {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .category {
+            font-weight: 700;
+        }
+
+        .urgency {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: 800;
+        }
+
+        .urgency-high {
+            background: var(--amber-wash);
+            color: var(--amber);
+        }
+
+        .urgency-normal {
+            background: var(--wash);
+            color: var(--muted);
+        }
+
+        .empty {
+            padding: 22px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .verification {
+            margin-top: 26px;
+            padding: 14px 16px;
+            border: 1px solid var(--line);
+            background: #fbfcfc;
+        }
+
+        .verification h2 {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .verification p {
+            margin: 5px 0;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .fingerprint {
+            color: var(--ink) !important;
+            font: 700 9px/1.5 'Courier New', monospace;
+            overflow-wrap: anywhere;
+        }
+
+        .disclaimer {
+            margin-top: 14px !important;
+            padding-top: 9px;
+            border-top: 1px solid var(--line);
+            color: var(--ink) !important;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 18px;
+            padding-top: 9px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 14mm;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                max-width: none;
+                padding: 0;
+                font-size: 10px;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .metric,
+            .verification,
+            thead {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            tr,
+            .verification {
+                break-inside: avoid;
+            }
+        }
+
+        @media screen and (max-width: 680px) {
+            body {
+                padding: 16px;
+            }
+
+            .masthead {
+                flex-direction: column;
+            }
+
+            .report-meta {
+                text-align: left;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 680px;
+            }
+
+            .toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body class="p-8 max-w-5xl mx-auto">
+
+    <div class="no-print mb-6 p-4 bg-slate-900 text-white rounded-2xl flex items-center justify-between shadow-lg">
+        <div>
+            <h3 class="font-extrabold text-sm">Bagga Executive PDF Report Preview</h3>
+            <p class="text-xs text-slate-300">Click the print button below or press Ctrl+P to save as PDF.</p>
+        </div>
+        <button onclick="window.print()"
+            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl transition shadow">
+            🖨️ Save as PDF / Print
+        </button>
+    </div>
+
+    <div class="border-b-2 border-slate-900 pb-6 mb-6 flex items-start justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-black tracking-tight text-blue-900">Bagga AI Intelligence</span>
+                <span
+                    class="px-2.5 py-0.5 text-xs font-bold bg-slate-100 text-slate-800 rounded-full border border-slate-300">B2B
+                    Venue Report</span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium mt-1">Post-Event Venue Quality Assurance &amp; Telemetry Audit
+            </p>
+        </div>
+        <div class="text-right shrink-0">
+            <p class="text-xs font-bold text-slate-400">EVENT DATE</p>
+            <p class="text-sm font-black text-slate-800">{{ event_date or "Not provided" }}</p>
+            <p class="text-xs font-bold text-slate-400 mt-3">REPORT GENERATED</p>
+            <p class="text-xs font-bold text-slate-700">{{ generated_at }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Event</p>
+            <p class="text-xs font-black text-slate-900 mt-1">{{ event_name or "Not provided" }}</p>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Venue</p>
+            <p class="text-xs font-black text-slate-900 mt-1">{{ event_venue or "Not provided" }}</p>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Location</p>
+            <p class="text-xs font-black text-slate-900 mt-1">{{ event_location or "Not provided" }}</p>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Organizer</p>
+            <p class="text-xs font-black text-slate-900 mt-1">{{ event_organizer or "Not provided" }}</p>
+        </div>
+        <div class="p-3 rounded-xl border border-blue-200 bg-blue-50">
+            <p class="text-[10px] font-bold uppercase text-blue-700 tracking-wider">Submissions</p>
+            <p class="text-xs font-black text-blue-900 mt-1">{{ total_notes }} feedback notes</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Total Submissions</p>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ total_notes }}</p>
+        </div>
+        <div class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+            <p class="text-[10px] font-bold uppercase text-amber-700 tracking-wider">High Urgency Alerts</p>
+            <p class="text-2xl font-black text-amber-800 mt-1">{{ high_urgency }}</p>
+        </div>
+        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+            <p class="text-[10px] font-bold uppercase text-emerald-700 tracking-wider">High Urgency Share</p>
+            <p class="text-2xl font-black text-emerald-800 mt-1">{{ high_urgency_rate }}%</p>
+        </div>
+        <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+            <p class="text-[10px] font-bold uppercase text-indigo-700 tracking-wider">Captured Attendees</p>
+            <p class="text-2xl font-black text-indigo-800 mt-1">{{ total_attendees }}</p>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <h3 class="text-sm font-black uppercase tracking-wider text-slate-800 mb-4 pb-2 border-b border-slate-200">
+            Attendee Concerns &amp; Resolution Triage Log
+        </h3>
+        <p class="text-[10px] text-slate-500 mb-3">English translations are machine-generated; compare them with the
+            original
+            message when accuracy is important.</p>
+
+        <table class="w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                    <th class="py-3 px-3">Attendee ID</th>
+                    <th class="py-3 px-3">Category</th>
+                    <th class="py-3 px-3">Original Feedback</th>
+                    <th class="py-3 px-3">English Translation</th>
+                    <th class="py-3 px-3">Urgency</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 font-medium">
+                {% for fb in feedbacks %}
+                <tr>
+                    <td class="py-3 px-3 font-bold text-blue-900">
+                        {{ fb.anon_id or "Attendee" }}
+                        <span class="block text-[10px] font-normal text-slate-500">{% if fb.language == 'lg' %}Luganda{%
+                            elif fb.language == 'sw' %}Kiswahili{% else %}English{% endif %}</span>
+                    </td>
+                    <td class="py-3 px-3 font-bold">{{ fb.category or "GENERAL" }}</td>
+                    <td class="py-3 px-3 text-slate-800">{{ fb.raw_text or "" }}</td>
+                    <td class="py-3 px-3 italic text-slate-600">
+                        {% if fb.language in ['lg', 'sw'] %}
+                        {% if fb.translated_text and fb.translated_text.strip() != (fb.raw_text or '').strip() %}
+                        {{ fb.translated_text }}
+                        {% else %}
+                        Translation unavailable
+                        {% endif %}
+                        {% else %}
+                        {{ fb.translated_text or fb.raw_text or "" }}
+                        {% endif %}
+                    </td>
+                    <td class="py-3 px-3">
+                        {% if fb.urgency == 'HIGH' %}
+                        <span
+                            class="px-2 py-0.5 text-[10px] font-black rounded bg-amber-100 text-amber-800 border border-amber-300">HIGH</span>
+                        {% else %}
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-600">{{
+                            fb.urgency or "NORMAL" }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="py-6 text-center text-slate-400">No notes recorded in database.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="border-t border-slate-200 pt-4 text-center text-[10px] text-slate-400 font-medium">
+        Generated from Bagga feedback records on {{ generated_at }}. Event details are provided by the organizer.
+    </div>
+
+</body>
+
+</html>
